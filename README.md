@@ -6,6 +6,8 @@ And the training paradigm is 乐易心法-EnjoyChanging Mental Cultivation Metho
 
 The project MAY NOT be open source permanently.
 
+The project includes sp++3.0 library.
+
 Johiten
 
 XMU

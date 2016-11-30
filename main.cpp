@@ -1,5 +1,9 @@
-//#include "mainwindow.h"
-//#include <QApplication>
+#include "mainwindow.h"
+#include <QApplication>
+#include "edk.h"
+#include "edkErrorCode.h"
+#include "EmoStateDLL.h"
+#include <QDebug>
 
 //int main(int argc, char *argv[])
 //{
@@ -8,237 +12,164 @@
 //    w.show();
 
 //    return a.exec();
+//    EmoEngineEventHandle hEvent = EE_EmoEngineEventCreate();
+//    EmoStateHandle eState = EE_EmoStateCreate();
+//    unsigned int userID = -1;
+//    EE_EngineConnect();
 //}
+#include <iostream>
+#include <fstream>
+#include <conio.h>
+#include <sstream>
+#include <windows.h>
+#include <map>
 
-
-#include<windows.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <glut.h>
-#include <stdlib.h>
-#include<iostream>
-#include<conio.h>
-#include<math.h>
-
+#include "EmoStateDLL.h"
 #include "edk.h"
 #include "edkErrorCode.h"
-#include "EmoStateDLL.h"
 
 #pragma comment(lib, "../lib/edk.lib")
-#pragma comment(lib, "../lib/glut32.lib")
 
-#define PI 3.1418
+using namespace std;
+EE_DataChannel_t targetChannelList[] = {
+        ED_COUNTER,
+        ED_AF3, ED_F7, ED_F3, ED_FC5, ED_T7,
+        ED_P7, ED_O1, ED_O2, ED_P8, ED_T8,
+        ED_FC6, ED_F4, ED_F8, ED_AF4, ED_GYROX, ED_GYROY, ED_TIMESTAMP,
+        ED_FUNC_ID, ED_FUNC_VALUE, ED_MARKER, ED_SYNC_SIGNAL
+    };
 
-bool oneTime = true;
-bool outOfBound = false;
-float currX = 0,currY = 0;
-double maxRadius = 10000;
-float xmax = 0, ymax = 0;
-float preX = 0, preY = 0;
-int incOrDec = 10;
-float oldXVal =0, oldYVal = 0;
-unsigned long pass = 0,globalElapsed = 0;
-int count = 0;
-float x;
+const char header[] = "COUNTER,AF3,F7,F3, FC5, T7, P7, O1, O2,P8"
+                      ", T8, FC6, F4,F8, AF4,GYROX, GYROY, TIMESTAMP, "
+                      "FUNC_ID, FUNC_VALUE, MARKER, SYNC_SIGNAL,";
 
-void init(void)
-{
-   glClearColor (0.0, 0.0, 0.0, 0.0);
-   glShadeModel (GL_FLAT);
-}
+int main(int argc, char** argv) {
 
-void drawCircle( float Radius, int numPoints )
-{
-  glBegin( GL_LINE_STRIP );
-    for( int i=0; i<numPoints; i++ )
-    {
-        float Angle = i * (2.0*PI/numPoints); // use 360 instead of 2.0*PI if
-        float X = cos( Angle )*Radius;  // you use d_cos and d_sin
-        float Y = sin( Angle )*Radius;
-        glVertex2f( X, Y );
-    }
-  glEnd();
-}
+    QApplication a(argc, argv);
 
-void drawFilledCircle(float radius)
-{
-    glEnable(GL_POINT_SMOOTH);
-    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
-    glPointSize(radius);
-    //glPoint(0, 0, 0);
-}
-
-void display(void)
-{
-   glClear(GL_COLOR_BUFFER_BIT);
-   glPushMatrix();
-
-   glColor3f(1.0,1.0,1.0);
-   drawCircle(800,100);
-   glColor3f(0.0,0.0,1.0);
-   drawCircle(maxRadius-4000,800);
-   glColor3f(0.0,1.0,1.0);
-   drawCircle(maxRadius,1000);
+    EmoEngineEventHandle eEvent			= EE_EmoEngineEventCreate();
+    EmoStateHandle eState				= EE_EmoStateCreate();
+    unsigned int userID					= 0;
+    const unsigned short composerPort	= 1726;
+    float secs							= 1;
+    unsigned int datarate				= 0;
+    bool readytocollect					= false;
+    int option							= 0;
+    int state							= 0;
+    string fileName = "testdata";
 
 
-   glColor3f(1.0, 0.0, 0.0);
-   glRectf(currX-400.0, currY-400.0, currX+400.0, currY+400.0);
+    std::string input;
+    //qDebug()<<"hi-d";
+    std::cout << "hi" << std::endl;
+    try {
 
-   glPopMatrix();
-   glutSwapBuffers();
-}
+//        if (argc != 2) {
+//            //throw std::exception("Please supply the log file name.\nUsage: EEGLogger [log_file_name].");
+//            qDebug()<<"111111";
+//            a.exit();
+//        }
 
-void changeXY(int x) // x = 0 : idle
-{
-    if( currX >0 )
-    {
-        float temp = currY/currX;
-        currX -= incOrDec;
-        currY = temp*currX;
-    }
-    else if( currX < 0)
-    {
-        float temp = currY/currX;
-        currX += incOrDec;
-        currY = temp*currX;
-    }
-    else
-    {
-        if( currY > 0 ) currY -= incOrDec;
-        else if( currY <0 ) currY += incOrDec;
-    }
-    if( x == 0)
-    {
-        if( (abs(currX) <= incOrDec) && (abs(currY) <= incOrDec))
-        {
-            xmax = 0;
-            ymax = 0;
+        std::cout << "===================================================================" << std::endl;
+        std::cout << "Example to show how to log EEG Data from EmoEngine/EmoComposer."	   << std::endl;
+        std::cout << "===================================================================" << std::endl;
+        std::cout << "Press '1' to start and connect to the EmoEngine                    " << std::endl;
+        std::cout << "Press '2' to connect to the EmoComposer                            " << std::endl;
+        std::cout << ">> ";
+
+        std::getline(std::cin, input, '\n');
+        option = atoi(input.c_str());
+        std::cout << "option";
+
+//        switch (option) {
+//            case 1:
+//            {
+//                if (EE_EngineConnect() != EDK_OK) {
+//                    throw std::exception("Emotiv Engine start up failed.");
+//                }
+//                break;
+//            }
+
+//            default:
+//                throw std::exception("Invalid option...");
+//                break;
+//        }
+        cout<<"function "<<EE_EngineConnect();
+        if (EE_EngineConnect() != EDK_OK) {
+            qDebug()<<"Emotiv Engine start up failed.";
+            a.exit();
         }
-        else
-        {
-            xmax = currX;
-            ymax = currY;
-        }
-    }
-    else
-    {
-        if( (abs(currX) <= incOrDec) && (abs(currY) <= incOrDec))
-        {
-            xmax = 0;
-            ymax = 0;
-        }
-    }
-}
 
 
-void updateDisplay(void)
-{
-   int gyroX = 0,gyroY = 0;
-   EE_HeadsetGetGyroDelta(0,&gyroX,&gyroY);
-   xmax += gyroX;
-   ymax += gyroY;
+        std::cout << "Start receiving EEG Data! Press any key to stop logging...\n" << std::endl;
+        std::ofstream ofs(fileName,std::ios::trunc);
+        ofs << header << std::endl;
 
-   if( outOfBound )
-   {
-       if( preX != gyroX && preY != gyroY )
-       {
-           xmax = currX;
-           ymax = currY;
-       }
-   }
+        DataHandle hData = EE_DataCreate();
+        EE_DataSetBufferSizeInSec(secs);
 
-   double val = sqrt((float)(xmax*xmax + ymax*ymax));
+        std::cout << "Buffer size in secs:" << secs << std::endl;
 
-    std::cout <<"xmax : " << xmax <<" ; ymax : " << ymax << std::endl;
+        while (!_kbhit()) {
 
+            state = EE_EngineGetNextEvent(eEvent);
+            if (state == EDK_OK) {
 
-   if( val >= maxRadius )
-   {
-       changeXY(1);
-       outOfBound = true;
-       preX = gyroX;
-       preY = gyroY;
-   }
-   else
-   {
-       outOfBound = false;
-        if(oldXVal == gyroX && oldYVal == gyroY)
-        {
-            ++count;
-            if( count > 10 )
-            {
-                changeXY(0);
+                EE_Event_t eventType = EE_EmoEngineEventGetType(eEvent);
+                EE_EmoEngineEventGetUserId(eEvent, &userID);
+
+                // Log the EmoState if it has been updated
+                if (eventType == EE_UserAdded) {
+                    std::cout << "User added";
+                    EE_DataAcquisitionEnable(userID,true);
+                    readytocollect = true;
+                }
             }
+
+            if (readytocollect) {
+
+                        EE_DataUpdateHandle(0, hData);
+
+                        unsigned int nSamplesTaken=0;
+                        EE_DataGetNumberOfSample(hData,&nSamplesTaken);
+
+                        std::cout << "Updated " << nSamplesTaken << std::endl;
+
+                        if (nSamplesTaken != 0) {
+
+                            double* data = new double[nSamplesTaken];
+                            for (int sampleIdx=0 ; sampleIdx<(int)nSamplesTaken ; ++ sampleIdx) {
+                                for (int i = 0 ; i<sizeof(targetChannelList)/sizeof(EE_DataChannel_t) ; i++) {
+
+                                    EE_DataGet(hData, targetChannelList[i], data, nSamplesTaken);
+                                    ofs << data[sampleIdx] << ",";
+                                }
+                                ofs << std::endl;
+                            }
+                            delete[] data;
+                        }
+
+            }
+
+            Sleep(100);
         }
-        else
-        {
-            count = 0;
-            currX = xmax;
-            currY = ymax;
-            oldXVal = gyroX;
-            oldYVal = gyroY;
-        }
-   }
-   Sleep(15);
-   glutPostRedisplay();
-}
-void reshape(int w, int h)
-{
-   glViewport (0, 0, (GLsizei) w, (GLsizei) h);
-   glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
-   glOrtho(-50000.0, 50000.0, -50000.0, 50000.0, -1.0, 1.0);
-   glMatrixMode(GL_MODELVIEW);
-   glLoadIdentity();
-}
-void mouse(int button, int state, int x, int y)
-{
-   switch (button) {
-      case GLUT_LEFT_BUTTON:
-         if (state == GLUT_DOWN)
-            glutIdleFunc(updateDisplay);
-         break;
-      case GLUT_MIDDLE_BUTTON:
-         if (state == GLUT_DOWN)
-            glutIdleFunc(NULL);
-         break;
-      default:
-         break;
-   }
-}
-/*
- *  Request double buffer display mode.
- *  Register mouse input callback functions
- */
-int main(int argc, char** argv)
-{
-   EmoEngineEventHandle hEvent = EE_EmoEngineEventCreate();
-   EmoStateHandle eState = EE_EmoStateCreate();
-   unsigned int userID = -1;
-   EE_EngineConnect();
-   if(oneTime)
-   {
-      printf("Start after 8 seconds\n");
-      Sleep(8000);
-      oneTime = false;
-   }
 
-   globalElapsed = GetTickCount();
+        ofs.close();
+        EE_DataFree(hData);
 
-   glutInit(&argc, argv);
-   glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB);
-   glutInitWindowSize (650, 650);
-   glutInitWindowPosition (100, 100);
-   glutCreateWindow (argv[0]);
-   init ();
-   glutDisplayFunc(display);
-   glutReshapeFunc(reshape);
-   glutIdleFunc(updateDisplay);
-   glutMainLoop();
 
-   EE_EngineDisconnect();
-   EE_EmoStateFree(eState);
-   EE_EmoEngineEventFree(hEvent);
+    }
+    catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        std::cout << "Press any key to exit..." << std::endl;
+        getchar();
+    }
 
-   return 0;
+    EE_EngineDisconnect();
+    EE_EmoStateFree(eState);
+    EE_EmoEngineEventFree(eEvent);
+
+    return 0;
 }
+
+
