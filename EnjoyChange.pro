@@ -15,7 +15,11 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    deviceinfopanel.cpp \
+    signalpanel.cpp \
+    brainpowerpanel.cpp \
+    ecengine.cpp
 
 HEADERS  += mainwindow.h \
     include/edk.h \
@@ -177,7 +181,11 @@ HEADERS  += mainwindow.h \
     include/spppinclude/window-impl.h \
     include/spppinclude/window.h \
     include/spppinclude/wvd-impl.h \
-    include/spppinclude/wvd.h
+    include/spppinclude/wvd.h \
+    deviceinfopanel.h \
+    signalpanel.h \
+    brainpowerpanel.h \
+    ecengine.h
 
 FORMS    += mainwindow.ui
 
