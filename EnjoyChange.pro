@@ -218,5 +218,6 @@ DISTFILES += \
     .swp \
     .gitattributes \
     .gitignore \
-    README.md
-
+    README.md \
+    –Ë«Û∑÷Œˆ.txt
+INCLUDEPATH += $$PWD/include/spppinclude

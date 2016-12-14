@@ -5,8 +5,10 @@
 #include "EmoStateDLL.h"
 #include "edk.h"
 #include "edkErrorCode.h"
+#include "spppinclude/vector.h"
+#include "complex.h"
 using namespace std;
-
+using namespace splab;
 
 
 class ECEngine : public QObject
@@ -40,6 +42,37 @@ private:
     bool                readyToCollect;
     unsigned int        nSamplesTaken;                                     //see example 11
     bool                userAdded;
+    double *            bufferHead[16];
+    double  bufferAF3[520],bufferF7[520],bufferF3[520],bufferFC5[520],bufferT7[520],bufferP7[520],bufferO1[520],
+            bufferAF4[520],bufferF8[520],bufferF4[520],bufferFC6[520],bufferT8[520],bufferP8[520],bufferO2[520];
+    Vector<double>      rawBuffer_AF3;
+    Vector<complex<double> >  fft_AF3;
+    Vector<double>      rawBuffer_F7;
+    Vector<complex<double> >  fft_F7;
+    Vector<double>      rawBuffer_F3;
+    Vector<complex<double> >  fft_F3;
+    Vector<double>      rawBuffer_FC5;
+    Vector<complex<double> >  fft_FC5;
+    Vector<double>      rawBuffer_T7;
+    Vector<complex<double> >  fft_T7;
+    Vector<double>      rawBuffer_P7;
+    Vector<complex<double> >  fft_P7;
+    Vector<double>      rawBuffer_O1;
+    Vector<complex<double> >  fft_O1;
+    Vector<double>      rawBuffer_O2;
+    Vector<complex<double> >  fft_O2;
+    Vector<double>      rawBuffer_P8;
+    Vector<complex<double> >  fft_P8;
+    Vector<double>      rawBuffer_T8;
+    Vector<complex<double> >  fft_T8;
+    Vector<double>      rawBuffer_FC6;
+    Vector<complex<double> >  fft_FC6;
+    Vector<double>      rawBuffer_F4;
+    Vector<complex<double> >  fft_F4;
+    Vector<double>      rawBuffer_F8;
+    Vector<complex<double> >  fft_F8;
+    Vector<double>      rawBuffer_AF4;
+    Vector<complex<double> >  fft_AF4;
 
     //EE_DataChannel_t    targetChannelList[16];
 

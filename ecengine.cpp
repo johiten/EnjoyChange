@@ -5,7 +5,9 @@
 #include <windows.h>
 #include <QTime>
 #include <QCoreApplication>
+#include "spppinclude/vector.h"
 using namespace std;
+using namespace splab;
 
 EE_DataChannel_t targetChannelList[] = {
         ED_AF3, ED_F7, ED_F3, ED_FC5, ED_T7,
@@ -14,6 +16,20 @@ EE_DataChannel_t targetChannelList[] = {
 };
 
 ECEngine::start(){
+    bufferHead[0]=bufferAF3;
+    bufferHead[1]=bufferF7;
+    bufferHead[2]=bufferF3;
+    bufferHead[3]=bufferFC5;
+    bufferHead[4]=bufferT7;
+    bufferHead[5]=bufferP7;
+    bufferHead[6]=bufferO1;
+    bufferHead[7]=bufferO2;
+    bufferHead[8]=bufferP8;
+    bufferHead[9]=bufferT8;
+    bufferHead[10]=bufferFC6;
+    bufferHead[11]=bufferF4;
+    bufferHead[12]=bufferF8;
+    bufferHead[13]=bufferAF4;
     while(EE_EngineConnect()!=EDK_OK){
 
         //QTest::qSleep(500);
@@ -47,40 +63,38 @@ ECEngine::start(){
     }
 
     while(readyToCollect){
-        //string output="";
-        //stringstream ss;
-        //ss.Init();
         EE_DataUpdateHandle(0, hData);
         EE_DataGetNumberOfSample(hData,&nSamplesTaken);
 
         qDebug() << "Updated " << nSamplesTaken;
 
-//        if (nSamplesTaken != 0) {
-//            double ** buffer = new double*[14];
-//            for (int i=0; i<14; i++)
-//                buffer[i] = new double[nSamplesTaken];
+        if (nSamplesTaken != 0) {
+            if(nSamplesTaken<128)break;
+            else nSamplesTaken = 128;
+            EE_DataGetMultiChannels(hData, targetChannelList, 14, bufferHead, nSamplesTaken);
+            rawBuffer_AF3 = Vector<double>(nSamplesTaken, bufferHead[0]);
+            rawBuffer_F7  = Vector<double>(nSamplesTaken, bufferHead[1]);
+            rawBuffer_F3  = Vector<double>(nSamplesTaken, bufferHead[2]);
+            rawBuffer_FC5  = Vector<double>(nSamplesTaken, bufferHead[3]);
+            rawBuffer_T7  = Vector<double>(nSamplesTaken, bufferHead[4]);
+            rawBuffer_P7  = Vector<double>(nSamplesTaken, bufferHead[5]);
+            rawBuffer_O1  = Vector<double>(nSamplesTaken, bufferHead[6]);
+            rawBuffer_O2  = Vector<double>(nSamplesTaken, bufferHead[7]);
+            rawBuffer_P8  = Vector<double>(nSamplesTaken, bufferHead[8]);
+            rawBuffer_T8  = Vector<double>(nSamplesTaken, bufferHead[9]);
+            rawBuffer_FC6  = Vector<double>(nSamplesTaken, bufferHead[10]);
+            rawBuffer_F4  = Vector<double>(nSamplesTaken, bufferHead[11]);
+            rawBuffer_F8  = Vector<double>(nSamplesTaken, bufferHead[12]);
+            rawBuffer_AF4  = Vector<double>(nSamplesTaken, bufferHead[13]);
 
-//            EE_DataGetMultiChannels(hData, targetChannelList, 14, buffer, nSamplesTaken);
-
-//            for (int sampleIdx=0 ; sampleIdx<(int)nSamplesTaken ; ++ sampleIdx) {
-//                for (int i = 0 ; i<14 ; i++) {
-//                    ss<<buffer[i][sampleIdx];
-//                    output = output+" "+ss.str();
-//                    //ss.Init();
+        }
 
 
-//                    //qDebug() << buffer[i][sampleIdx] << ",";
-//                }
-//                qDebug()<<output.c_str();
-//            }
-//            for (int i=0; i<14; i++)
-//                delete buffer[i];
-//            delete buffer;
-//        }
+
         //QTest::qSleep(500);
         QTime t;
         t.start();
-        while(t.elapsed()<500)
+        while(t.elapsed()<1010)
             QCoreApplication::processEvents();
     }
 }
@@ -95,7 +109,7 @@ ECEngine::ECEngine(QObject *parent):
     userAdded(false)
 
 {
-
+    bufferHead[0]=bufferAF3;
 
 
 }
