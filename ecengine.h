@@ -7,11 +7,7 @@
 #include "edkErrorCode.h"
 using namespace std;
 
-EE_DataChannel_t targetChannelList[] = {
-        ED_AF3, ED_F7, ED_F3, ED_FC5, ED_T7,
-        ED_P7, ED_O1, ED_O2, ED_P8, ED_T8,
-        ED_FC6, ED_F4, ED_F8, ED_AF4
-    };
+
 
 class ECEngine : public QObject
 {
@@ -19,6 +15,9 @@ class ECEngine : public QObject
 public:
     explicit ECEngine(QObject *parent = 0);
     ~ECEngine();
+    start();
+
+    bool initTargetChannelList();
 
 signals:
 
@@ -40,6 +39,10 @@ private:
     unsigned int        datarate;
     bool                readyToCollect;
     unsigned int        nSamplesTaken;                                     //see example 11
+    bool                userAdded;
+
+    //EE_DataChannel_t    targetChannelList[16];
+
 
 
 };
