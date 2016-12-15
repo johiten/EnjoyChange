@@ -7,6 +7,7 @@
 #include "edkErrorCode.h"
 #include "spppinclude/vector.h"
 #include "complex.h"
+#include <QTimer>
 using namespace std;
 using namespace splab;
 
@@ -73,6 +74,8 @@ private:
     Vector<complex<double> >  fft_F8;
     Vector<double>      rawBuffer_AF4;
     Vector<complex<double> >  fft_AF4;
+    
+    
 
     //EE_DataChannel_t    targetChannelList[16];
 

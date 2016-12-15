@@ -24,9 +24,6 @@ void mypause(int ms){
 
 void ECEngine::start(){
     initEngine();
-
-
-
     while(readyToCollect){
         EE_DataUpdateHandle(0, hData);
         EE_DataGetNumberOfSample(hData,&nSamplesTaken);
@@ -50,7 +47,6 @@ void ECEngine::start(){
             rawBuffer_F4  = Vector<double>(nSamplesTaken, bufferHead[11]);
             rawBuffer_F8  = Vector<double>(nSamplesTaken, bufferHead[12]);
             rawBuffer_AF4  = Vector<double>(nSamplesTaken, bufferHead[13]);
-
         }
         mypause(SAMPLETIMEMS);
     }
@@ -64,7 +60,6 @@ ECEngine::ECEngine(QObject *parent):
     readyToCollect(false),
     nSamplesTaken(0),
     userAdded(false){
-
 }
 
 ECEngine::~ECEngine(){
@@ -88,18 +83,9 @@ void ECEngine::initEngine(){
     bufferHead[13]=bufferAF4;
 
     while(EE_EngineConnect()!=EDK_OK){
-
-        //QTest::qSleep(500);
-        //Sleep(500);
-
-        QTime t;
-        t.start();
-        while(t.elapsed()<500)
-            QCoreApplication::processEvents();
-
-        qDebug()<<"EE_EngineConnect not ready.";
+        mypause(300);
+        qDebug()<<"EE_EngineConnect not ready. Connecting...";
     }
-
 
     eEvent = EE_EmoEngineEventCreate();
     eState = EE_EmoStateCreate();
