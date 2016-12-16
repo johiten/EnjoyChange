@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "ecengine.h"
+#include <QTimer>
 
 namespace Ui {
 class MainWindow;
@@ -17,6 +18,19 @@ public:
     ~MainWindow();
 
     void startEngine();
+
+    ///////////////////////
+    void drawCurves(QPainter &painter);
+    void paintEvent(QPaintEvent *);
+
+    int displayDataPos1, displayDataPos2, displayDataTmp;
+
+    QTimer *timer;
+
+
+
+    ////////////////////////
+
 
 private:
     Ui::MainWindow *ui;
