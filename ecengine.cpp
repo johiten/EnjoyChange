@@ -24,10 +24,36 @@ void mypause(int ms){
 
 void ECEngine::start(){
     initEngine();
+//    while(readyToCollect){
+//        EE_DataUpdateHandle(0, hData);
+//        EE_DataGetNumberOfSample(hData,&nSamplesTaken);
 
+//        qDebug() << "Updated " << nSamplesTaken;
 
+//        if (nSamplesTaken != 0) {
+//            EE_DataGetMultiChannels(hData, targetChannelList, 14, bufferHead, nSamplesTaken);
+//            nSamplesTaken = 128;
+//            rawBuffer_AF3 = Vector<double>(nSamplesTaken, bufferHead[0]);
+//            rawBuffer_F7  = Vector<double>(nSamplesTaken, bufferHead[1]);
+//            rawBuffer_F3  = Vector<double>(nSamplesTaken, bufferHead[2]);
+//            rawBuffer_FC5  = Vector<double>(nSamplesTaken, bufferHead[3]);
+//            rawBuffer_T7  = Vector<double>(nSamplesTaken, bufferHead[4]);
+//            rawBuffer_P7  = Vector<double>(nSamplesTaken, bufferHead[5]);
+//            rawBuffer_O1  = Vector<double>(nSamplesTaken, bufferHead[6]);
+//            rawBuffer_O2  = Vector<double>(nSamplesTaken, bufferHead[7]);
+//            rawBuffer_P8  = Vector<double>(nSamplesTaken, bufferHead[8]);
+//            rawBuffer_T8  = Vector<double>(nSamplesTaken, bufferHead[9]);
+//            rawBuffer_FC6  = Vector<double>(nSamplesTaken, bufferHead[10]);
+//            rawBuffer_F4  = Vector<double>(nSamplesTaken, bufferHead[11]);
+//            rawBuffer_F8  = Vector<double>(nSamplesTaken, bufferHead[12]);
+//            rawBuffer_AF4  = Vector<double>(nSamplesTaken, bufferHead[13]);
+//        }
+//        mypause(SAMPLETIMEMS);
+//    }
+}
 
-    while(readyToCollect){
+void ECEngine::updateBuffer(){
+    if(readyToCollect){
         EE_DataUpdateHandle(0, hData);
         EE_DataGetNumberOfSample(hData,&nSamplesTaken);
 
@@ -50,13 +76,11 @@ void ECEngine::start(){
             rawBuffer_F4  = Vector<double>(nSamplesTaken, bufferHead[11]);
             rawBuffer_F8  = Vector<double>(nSamplesTaken, bufferHead[12]);
             rawBuffer_AF4  = Vector<double>(nSamplesTaken, bufferHead[13]);
-
         }
-        mypause(SAMPLETIMEMS);
     }
 }
 
-ECEngine::ECEngine(QObject *parent):
+ECEngine::ECEngine(QObject *parent)://构造函数，初始化那几个简单的变量
     QObject(parent),
     userID(0),
     secs(1.0),
@@ -64,7 +88,6 @@ ECEngine::ECEngine(QObject *parent):
     readyToCollect(false),
     nSamplesTaken(0),
     userAdded(false){
-
 }
 
 ECEngine::~ECEngine(){
@@ -88,23 +111,14 @@ void ECEngine::initEngine(){
     bufferHead[13]=bufferAF4;
 
     while(EE_EngineConnect()!=EDK_OK){
-
-        //QTest::qSleep(500);
-        //Sleep(500);
-
-        QTime t;
-        t.start();
-        while(t.elapsed()<500)
-            QCoreApplication::processEvents();
-
-        qDebug()<<"EE_EngineConnect not ready.";
+        mypause(300);
+        qDebug()<<"EE_EngineConnect not ready. Connecting...";
     }
-
 
     eEvent = EE_EmoEngineEventCreate();
     eState = EE_EmoStateCreate();
     hData = EE_DataCreate();
-    EE_DataSetBufferSizeInSec(secs*2);
+    EE_DataSetBufferSizeInSec(secs*2);//Buffer in Emotiv
 
     while(!readyToCollect){
         if(EE_EngineGetNextEvent(eEvent) == EDK_OK){
@@ -118,4 +132,7 @@ void ECEngine::initEngine(){
             }
         }
     }
+    timer_1s_1 = new QTimer(this);
+    connect( timer_1s_1, SIGNAL(timeout()), this, SLOT(updateBuffer()) );
+    timer_1s_1->start(SAMPLETIMEMS);
 }

@@ -7,6 +7,7 @@
 #include "edkErrorCode.h"
 #include "spppinclude/vector.h"
 #include "complex.h"
+#include <QTimer>
 using namespace std;
 using namespace splab;
 
@@ -18,13 +19,14 @@ class ECEngine : public QObject
 public:
     explicit ECEngine(QObject *parent = 0);
     ~ECEngine();
-    void start();
-    void initEngine();
+    void start();//start getting data into rawBuffer_xxx
+    void initEngine();//initialize member variables
+
 
 signals:
 
 public slots:
-
+    void updateBuffer();//SLOT
 
 private:
     int                 batteryLevel, maxBatteryLevel;//ES_GetBatteryChargeLevel()
@@ -73,6 +75,8 @@ private:
     Vector<complex<double> >  fft_F8;
     Vector<double>      rawBuffer_AF4;
     Vector<complex<double> >  fft_AF4;
+
+    QTimer *timer_1s_1;//used for getting data into bufferXX
 
     //EE_DataChannel_t    targetChannelList[16];
 

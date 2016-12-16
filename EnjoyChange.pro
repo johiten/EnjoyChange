@@ -19,7 +19,8 @@ SOURCES += main.cpp\
     deviceinfopanel.cpp \
     signalpanel.cpp \
     brainpowerpanel.cpp \
-    ecengine.cpp
+    ecengine.cpp \
+    draweegtest.cpp
 
 HEADERS  += mainwindow.h \
     include/edk.h \
@@ -185,9 +186,12 @@ HEADERS  += mainwindow.h \
     deviceinfopanel.h \
     signalpanel.h \
     brainpowerpanel.h \
-    ecengine.h
+    ecengine.h \
+    draweegtest.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    form.ui \
+    draweegtest.ui
 
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/ -ledk
