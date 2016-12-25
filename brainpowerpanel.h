@@ -3,15 +3,20 @@
 
 #include <QWidget>
 
+namespace Ui {
+class BrainPowerPanel;
+}
+
 class BrainPowerPanel : public QWidget
 {
     Q_OBJECT
+
 public:
     explicit BrainPowerPanel(QWidget *parent = 0);
+    ~BrainPowerPanel();
 
-signals:
-
-public slots:
+private:
+    Ui::BrainPowerPanel *ui;
 };
 
 #endif // BRAINPOWERPANEL_H

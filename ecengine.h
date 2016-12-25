@@ -12,6 +12,7 @@ using namespace std;
 using namespace splab;
 
 #define SAMPLETIMEMS 1000
+//采样时间固定为1s,能保证0~64Hz中1Hz的分辨率。
 
 class ECEngine : public QObject
 {
@@ -21,18 +22,22 @@ public:
     ~ECEngine();
     void start();//start getting data into rawBuffer_xxx
     void initEngine();//initialize member variables
+    void baseLineCorrect();
 
 
 signals:
+    void bufferUpdated();
 
 public slots:
     void updateBuffer();//SLOT
+    void updateDeviceInfo();//battery and other infoes.
+    void computeFFT();
 
 private:
     int                 batteryLevel, maxBatteryLevel;//ES_GetBatteryChargeLevel()
     int                 headsetOn;//ES_GetHeadsetOn()
     EE_SignalStrength_t wirelessSignalStatus;//ES_GetWirelessSignalStatus()
-    qint32              contactQuality[20];//ES_GetContactQualityFromAllChannels()
+    EE_EEG_ContactQuality_t contactQuality[20];//ES_GetContactQualityFromAllChannels()
 
     EmoEngineEventHandle eEvent;//EE_EmoEngineEventCreate()
     EmoStateHandle      eState;//EE_EmoStateCreate() and EE_EngineGetNextEvent()
@@ -47,6 +52,15 @@ private:
     double *            bufferHead[16];
     double  bufferAF3[520],bufferF7[520],bufferF3[520],bufferFC5[520],bufferT7[520],bufferP7[520],bufferO1[520],
             bufferAF4[520],bufferF8[520],bufferF4[520],bufferFC6[520],bufferT8[520],bufferP8[520],bufferO2[520];
+    double baseLineAF3, baseLineAF4,
+        baseLineF7,baseLineF8,
+        baseLineF3,baseLineF4,
+        baseLineFC5,baseLineFC6,
+        baseLineT7,baseLineT8,
+        baseLineP7,baseLineP8,
+        baseLineO1,baseLineO2;
+
+public:
     Vector<double>      rawBuffer_AF3;
     Vector<complex<double> >  fft_AF3;
     Vector<double>      rawBuffer_F7;
@@ -77,11 +91,6 @@ private:
     Vector<complex<double> >  fft_AF4;
 
     QTimer *timer_1s_1;//used for getting data into bufferXX
-
-    //EE_DataChannel_t    targetChannelList[16];
-
-
-
 };
 
 #endif // ECENGINE_H

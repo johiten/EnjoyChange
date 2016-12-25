@@ -3,15 +3,20 @@
 
 #include <QWidget>
 
+namespace Ui {
+class SignalPanel;
+}
+
 class SignalPanel : public QWidget
 {
     Q_OBJECT
+
 public:
     explicit SignalPanel(QWidget *parent = 0);
+    ~SignalPanel();
 
-signals:
-
-public slots:
+private:
+    Ui::SignalPanel *ui;
 };
 
 #endif // SIGNALPANEL_H

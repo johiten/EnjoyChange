@@ -16,11 +16,11 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    deviceinfopanel.cpp \
+    ecengine.cpp \
+    training.cpp \
     signalpanel.cpp \
     brainpowerpanel.cpp \
-    ecengine.cpp \
-    draweegtest.cpp
+    deviceinfopanel.cpp
 
 HEADERS  += mainwindow.h \
     include/edk.h \
@@ -183,15 +183,17 @@ HEADERS  += mainwindow.h \
     include/spppinclude/window.h \
     include/spppinclude/wvd-impl.h \
     include/spppinclude/wvd.h \
-    deviceinfopanel.h \
+    ecengine.h \
+    training.h \
     signalpanel.h \
     brainpowerpanel.h \
-    ecengine.h \
-    draweegtest.h
+    deviceinfopanel.h
 
 FORMS    += mainwindow.ui \
-    form.ui \
-    draweegtest.ui
+    training.ui \
+    signalpanel.ui \
+    brainpowerpanel.ui \
+    deviceinfopanel.ui
 
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/ -ledk
@@ -222,6 +224,5 @@ DISTFILES += \
     .swp \
     .gitattributes \
     .gitignore \
-    README.md \
-    –Ë«Û∑÷Œˆ.txt
+    README.md
 INCLUDEPATH += $$PWD/include/spppinclude

@@ -6,6 +6,8 @@
 #include <QTime>
 #include <QCoreApplication>
 #include "spppinclude/vector.h"
+#include "spppinclude/vectormath.h"
+#include "spppinclude/fft.h"
 using namespace std;
 using namespace splab;
 
@@ -24,60 +26,6 @@ void mypause(int ms){
 
 void ECEngine::start(){
     initEngine();
-//    while(readyToCollect){
-//        EE_DataUpdateHandle(0, hData);
-//        EE_DataGetNumberOfSample(hData,&nSamplesTaken);
-
-//        qDebug() << "Updated " << nSamplesTaken;
-
-//        if (nSamplesTaken != 0) {
-//            EE_DataGetMultiChannels(hData, targetChannelList, 14, bufferHead, nSamplesTaken);
-//            nSamplesTaken = 128;
-//            rawBuffer_AF3 = Vector<double>(nSamplesTaken, bufferHead[0]);
-//            rawBuffer_F7  = Vector<double>(nSamplesTaken, bufferHead[1]);
-//            rawBuffer_F3  = Vector<double>(nSamplesTaken, bufferHead[2]);
-//            rawBuffer_FC5  = Vector<double>(nSamplesTaken, bufferHead[3]);
-//            rawBuffer_T7  = Vector<double>(nSamplesTaken, bufferHead[4]);
-//            rawBuffer_P7  = Vector<double>(nSamplesTaken, bufferHead[5]);
-//            rawBuffer_O1  = Vector<double>(nSamplesTaken, bufferHead[6]);
-//            rawBuffer_O2  = Vector<double>(nSamplesTaken, bufferHead[7]);
-//            rawBuffer_P8  = Vector<double>(nSamplesTaken, bufferHead[8]);
-//            rawBuffer_T8  = Vector<double>(nSamplesTaken, bufferHead[9]);
-//            rawBuffer_FC6  = Vector<double>(nSamplesTaken, bufferHead[10]);
-//            rawBuffer_F4  = Vector<double>(nSamplesTaken, bufferHead[11]);
-//            rawBuffer_F8  = Vector<double>(nSamplesTaken, bufferHead[12]);
-//            rawBuffer_AF4  = Vector<double>(nSamplesTaken, bufferHead[13]);
-//        }
-//        mypause(SAMPLETIMEMS);
-//    }
-}
-
-void ECEngine::updateBuffer(){
-    if(readyToCollect){
-        EE_DataUpdateHandle(0, hData);
-        EE_DataGetNumberOfSample(hData,&nSamplesTaken);
-
-        qDebug() << "Updated " << nSamplesTaken;
-
-        if (nSamplesTaken != 0) {
-            EE_DataGetMultiChannels(hData, targetChannelList, 14, bufferHead, nSamplesTaken);
-            nSamplesTaken = 128;
-            rawBuffer_AF3 = Vector<double>(nSamplesTaken, bufferHead[0]);
-            rawBuffer_F7  = Vector<double>(nSamplesTaken, bufferHead[1]);
-            rawBuffer_F3  = Vector<double>(nSamplesTaken, bufferHead[2]);
-            rawBuffer_FC5  = Vector<double>(nSamplesTaken, bufferHead[3]);
-            rawBuffer_T7  = Vector<double>(nSamplesTaken, bufferHead[4]);
-            rawBuffer_P7  = Vector<double>(nSamplesTaken, bufferHead[5]);
-            rawBuffer_O1  = Vector<double>(nSamplesTaken, bufferHead[6]);
-            rawBuffer_O2  = Vector<double>(nSamplesTaken, bufferHead[7]);
-            rawBuffer_P8  = Vector<double>(nSamplesTaken, bufferHead[8]);
-            rawBuffer_T8  = Vector<double>(nSamplesTaken, bufferHead[9]);
-            rawBuffer_FC6  = Vector<double>(nSamplesTaken, bufferHead[10]);
-            rawBuffer_F4  = Vector<double>(nSamplesTaken, bufferHead[11]);
-            rawBuffer_F8  = Vector<double>(nSamplesTaken, bufferHead[12]);
-            rawBuffer_AF4  = Vector<double>(nSamplesTaken, bufferHead[13]);
-        }
-    }
 }
 
 ECEngine::ECEngine(QObject *parent)://构造函数，初始化那几个简单的变量
@@ -88,6 +36,8 @@ ECEngine::ECEngine(QObject *parent)://构造函数，初始化那几个简单的
     readyToCollect(false),
     nSamplesTaken(0),
     userAdded(false){
+
+    initEngine();
 }
 
 ECEngine::~ECEngine(){
@@ -112,7 +62,7 @@ void ECEngine::initEngine(){
 
     while(EE_EngineConnect()!=EDK_OK){
         mypause(300);
-        qDebug()<<"EE_EngineConnect not ready. Connecting...";
+        qDebug()<<"EE_EngineConnect not ready. Connecting...";//todo:改为显示在gui中
     }
 
     eEvent = EE_EmoEngineEventCreate();
@@ -126,13 +76,85 @@ void ECEngine::initEngine(){
             EE_EmoEngineEventGetUserId(eEvent, &userID);
 
             if (eventType == EE_UserAdded) {
-                qDebug() << "User added";
+                //qDebug() << "User added";
                 EE_DataAcquisitionEnable(userID,true);
                 readyToCollect = true;
             }
         }
     }
+
     timer_1s_1 = new QTimer(this);
     connect( timer_1s_1, SIGNAL(timeout()), this, SLOT(updateBuffer()) );
+    connect( timer_1s_1, SIGNAL(timeout()), this, SLOT(updateDeviceInfo()) );
     timer_1s_1->start(SAMPLETIMEMS);
+
+    connect( this, SIGNAL(bufferUpdated()), this, SLOT(computeFFT()));
+}
+
+
+void ECEngine::baseLineCorrect(){
+    baseLineAF3 = sum(rawBuffer_AF3)/128;   rawBuffer_AF3 -= baseLineAF3;
+    baseLineAF4 = sum(rawBuffer_AF4)/128;   rawBuffer_AF4 -= baseLineAF4;
+    baseLineF7 = sum(rawBuffer_F7)/128;     rawBuffer_F7 -= baseLineF7;
+    baseLineF8 = sum(rawBuffer_F8)/128;     rawBuffer_F8 -= baseLineF8;
+    baseLineF3 = sum(rawBuffer_F3)/128;     rawBuffer_F3 -= baseLineF3;
+    baseLineF4 = sum(rawBuffer_F4)/128;     rawBuffer_F4 -= baseLineF4;
+    baseLineFC5 = sum(rawBuffer_FC5)/128;   rawBuffer_FC5 -= baseLineFC5;
+    baseLineFC6 = sum(rawBuffer_FC6)/128;   rawBuffer_FC6 -= baseLineFC6;
+    baseLineT7 = sum(rawBuffer_T7)/128;     rawBuffer_T7 -= baseLineT7;
+    baseLineT8 = sum(rawBuffer_T8)/128;     rawBuffer_T8 -= baseLineT8;
+    baseLineP7 = sum(rawBuffer_P7)/128;     rawBuffer_P7 -= baseLineP7;
+    baseLineP8 = sum(rawBuffer_P8)/128;     rawBuffer_P8 -= baseLineP8;
+    baseLineO1 = sum(rawBuffer_O1)/128;     rawBuffer_O1 -= baseLineO1;
+    baseLineO2 = sum(rawBuffer_O2)/128;     rawBuffer_O2 -= baseLineO2;
+}
+
+void ECEngine::updateBuffer(){
+    if(readyToCollect){
+        EE_DataUpdateHandle(0, hData);
+        EE_DataGetNumberOfSample(hData,&nSamplesTaken);
+
+        qDebug() << "Updated buffer: " << nSamplesTaken;
+
+        if (nSamplesTaken != 0) {
+            EE_DataGetMultiChannels(hData, targetChannelList, 14, bufferHead, nSamplesTaken);
+            nSamplesTaken = 128;
+            rawBuffer_AF3 = Vector<double>(nSamplesTaken, bufferHead[0]);
+            rawBuffer_F7  = Vector<double>(nSamplesTaken, bufferHead[1]);
+            rawBuffer_F3  = Vector<double>(nSamplesTaken, bufferHead[2]);
+            rawBuffer_FC5  = Vector<double>(nSamplesTaken, bufferHead[3]);
+            rawBuffer_T7  = Vector<double>(nSamplesTaken, bufferHead[4]);
+            rawBuffer_P7  = Vector<double>(nSamplesTaken, bufferHead[5]);
+            rawBuffer_O1  = Vector<double>(nSamplesTaken, bufferHead[6]);
+            rawBuffer_O2  = Vector<double>(nSamplesTaken, bufferHead[7]);
+            rawBuffer_P8  = Vector<double>(nSamplesTaken, bufferHead[8]);
+            rawBuffer_T8  = Vector<double>(nSamplesTaken, bufferHead[9]);
+            rawBuffer_FC6  = Vector<double>(nSamplesTaken, bufferHead[10]);
+            rawBuffer_F4  = Vector<double>(nSamplesTaken, bufferHead[11]);
+            rawBuffer_F8  = Vector<double>(nSamplesTaken, bufferHead[12]);
+            rawBuffer_AF4  = Vector<double>(nSamplesTaken, bufferHead[13]);
+            baseLineCorrect();
+            emit bufferUpdated();
+        }
+    }
+}
+
+void ECEngine::updateDeviceInfo(){//TODO: check  the values which are got in the function here.
+    ES_GetBatteryChargeLevel(eState, &batteryLevel, &maxBatteryLevel);
+    headsetOn = ES_GetHeadsetOn(eState);
+    wirelessSignalStatus = ES_GetWirelessSignalStatus(eState);
+    ES_GetContactQualityFromAllChannels(eState, contactQuality, 14);
+    //qDebug() << "Updated device info";
+}
+
+void ECEngine::computeFFT(){
+    qDebug()<<"---- computeFFT  ----";
+    fft_AF3 = fft(rawBuffer_AF3);//charge Emotiv..
+    qDebug()<<"compute over";
+    for(int i=0;i<5;i++)
+    qDebug()<<(double)fft_AF3[i].real()<<" "<<(double)fft_AF3[i].imag();
+    fft_AF4 = fft(rawBuffer_AF4);
+    for(int i=0;i<5;i++)
+    qDebug()<<fft_AF4[i].real()<<" "<<fft_AF4[i].imag();
+    qDebug()<<"---------";
 }

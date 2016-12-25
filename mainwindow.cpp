@@ -5,44 +5,22 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)//,
-    //engine(new ECEngine)
+    ui(new Ui::MainWindow),
+    engine(new ECEngine),
+    signalPanel(new SignalPanel),
+    brainPowerPanel(new BrainPowerPanel),
+    training(new Training),
+    deviceInfoPanel(new DeviceInfoPanel)
 {
     ui->setupUi(this);
-    //engine->start();
-    ///////////////////FOR TEST ONLY.
-    displayDataPos1 = displayDataPos2 = displayDataTmp = 0;
-    timer = new QTimer(this);
-    timer->setInterval(100);
-    connect(timer, SIGNAL(timeout()), this, SLOT(timerEvent()));
-    timer->start();
-    //////////////////
+/////////////////////    set layout and add widgets
+    //ui->verticalLayout->addWidget(signalPanel);
+    //this->setLayout(ui->verticalLayout);
+/////////////////////    connect signals with slots
+    //connect(engine->timer_1s_1, SIGNAL(timeout()), signalPanel, SLOT(update()));
+
 }
 
-MainWindow::~MainWindow()
-{
-    delete ui;
-    delete engine;
-}
-void MainWindow::startEngine(){
-    engine->start();
+MainWindow::~MainWindow(){
 }
 
-void MainWindow::drawCurves(QPainter &painter){
-    painter.setPen(QPen(Qt::red));
-    displayDataPos2 = displayDataTmp;
-    displayDataTmp = displayDataPos1;
-    painter.drawLine(QPoint(-4, -displayDataPos2), QPoint(0, -displayDataPos1));
-}
-
-void MainWindow::paintEvent(QPaintEvent *){
-    QPainter painter(this);
-    painter.setViewport(0,0,this->width(),this->height());
-    painter.setWindow(QRect(-1000, -25, 1001, 26));
-    drawCurves(painter);
-}
-
-void MainWindow::timerEvent(){
-    scroll(-4, 0);
-    displayDataPos1 = rand()%25;
-}
