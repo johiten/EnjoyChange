@@ -76,7 +76,6 @@ void ECEngine::initEngine(){
             EE_EmoEngineEventGetUserId(eEvent, &userID);
 
             if (eventType == EE_UserAdded) {
-                //qDebug() << "User added";
                 EE_DataAcquisitionEnable(userID,true);
                 readyToCollect = true;
             }
@@ -140,40 +139,18 @@ void ECEngine::updateBuffer(){
 }
 
 void ECEngine::updateDeviceInfo(){
-
     int state = EE_EngineGetNextEvent(eEvent);
     if (state == EDK_OK) {
         eventType = EE_EmoEngineEventGetType(eEvent);
         if(eventType == EE_EmoStateUpdated){
             EE_EmoEngineEventGetEmoState(eEvent, eState);
-                ES_GetBatteryChargeLevel(eState, &batteryLevel, &maxBatteryLevel);
-                headsetOn = ES_GetHeadsetOn(eState);
-                wirelessSignalStatus = ES_GetWirelessSignalStatus(eState);
-                ES_GetContactQualityFromAllChannels(eState, contactQuality, 14);
-                qDebug()<<"channel 3: "<<contactQuality[3];
+            ES_GetBatteryChargeLevel(eState, &batteryLevel, &maxBatteryLevel);
+            headsetOn = ES_GetHeadsetOn(eState);
+            wirelessSignalStatus = ES_GetWirelessSignalStatus(eState);
+            ES_GetContactQualityFromAllChannels(eState, contactQuality, 14);
         }
 
     }
-//    ES_GetBatteryChargeLevel(eState, &batteryLevel, &maxBatteryLevel);
-//    //qDebug()<<batteryLevel<<"  "<<maxBatteryLevel;
-//    headsetOn = ES_GetHeadsetOn(eState);
-//    //qDebug()<<"Headset On: "<<headsetOn;
-//    wirelessSignalStatus = ES_GetWirelessSignalStatus(eState);
-//    qDebug()<<"wireless signal: "<<wirelessSignalStatus;
-//    switch(wirelessSignalStatus){
-//    case NO_SIGNAL:
-//        qDebug()<<"no signal.";break;
-//    case BAD_SIGNAL:
-//        qDebug()<<"bad signal.";break;
-//    case GOOD_SIGNAL:
-//        qDebug()<<"good signal.";break;
-//    default:
-//        qDebug()<<"I dont know whats up.";
-//    }
-
-//    ES_GetContactQualityFromAllChannels(eState, contactQuality, 14);
-//    EE_EEG_ContactQuality_t tmp= ES_GetContactQuality(eState, 3);
-//    qDebug()<<"channel 3: "<<tmp;
 }
 
 void ECEngine::computeFFT(){

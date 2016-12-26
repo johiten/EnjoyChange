@@ -13,8 +13,10 @@ MainWindow::MainWindow(QWidget *parent) :
     deviceInfoPanel(new DeviceInfoPanel)
 {
     ui->setupUi(this);
+    signalPanel->linkEngine(engine);
+    //connect(engine->timer_1s_1,SIGNAL(timeout()),signalPanel,SLOT(update()));
 /////////////////////    set layout and add widgets
-    //ui->verticalLayout->addWidget(signalPanel);
+    ui->verticalLayout->addWidget(signalPanel);
     //this->setLayout(ui->verticalLayout);
 /////////////////////    connect signals with slots
     //connect(engine->timer_1s_1, SIGNAL(timeout()), signalPanel, SLOT(update()));
