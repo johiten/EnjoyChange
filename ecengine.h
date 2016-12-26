@@ -40,7 +40,7 @@ private:
     EE_EEG_ContactQuality_t contactQuality[20];//ES_GetContactQualityFromAllChannels()
 
     EmoEngineEventHandle eEvent;//EE_EmoEngineEventCreate()
-    EmoStateHandle      eState;//EE_EmoStateCreate() and EE_EngineGetNextEvent()
+    EmoStateHandle      eState;//EE_EmoStateCreate()
     DataHandle          hData;//EE_DataCreate()
     EE_Event_t          eventType;//EE_EmoEngineEventGetType(eEvent);
     unsigned int        userID;//EE_DataAcquisitionEnable(userID,true);    see example 11

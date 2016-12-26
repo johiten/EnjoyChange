@@ -139,22 +139,51 @@ void ECEngine::updateBuffer(){
     }
 }
 
-void ECEngine::updateDeviceInfo(){//TODO: check  the values which are got in the function here.
-    ES_GetBatteryChargeLevel(eState, &batteryLevel, &maxBatteryLevel);
-    headsetOn = ES_GetHeadsetOn(eState);
-    wirelessSignalStatus = ES_GetWirelessSignalStatus(eState);
-    ES_GetContactQualityFromAllChannels(eState, contactQuality, 14);
-    //qDebug() << "Updated device info";
+void ECEngine::updateDeviceInfo(){
+
+    int state = EE_EngineGetNextEvent(eEvent);
+    if (state == EDK_OK) {
+        eventType = EE_EmoEngineEventGetType(eEvent);
+        if(eventType == EE_EmoStateUpdated){
+            EE_EmoEngineEventGetEmoState(eEvent, eState);
+                ES_GetBatteryChargeLevel(eState, &batteryLevel, &maxBatteryLevel);
+                headsetOn = ES_GetHeadsetOn(eState);
+                wirelessSignalStatus = ES_GetWirelessSignalStatus(eState);
+                ES_GetContactQualityFromAllChannels(eState, contactQuality, 14);
+                qDebug()<<"channel 3: "<<contactQuality[3];
+        }
+
+    }
+//    ES_GetBatteryChargeLevel(eState, &batteryLevel, &maxBatteryLevel);
+//    //qDebug()<<batteryLevel<<"  "<<maxBatteryLevel;
+//    headsetOn = ES_GetHeadsetOn(eState);
+//    //qDebug()<<"Headset On: "<<headsetOn;
+//    wirelessSignalStatus = ES_GetWirelessSignalStatus(eState);
+//    qDebug()<<"wireless signal: "<<wirelessSignalStatus;
+//    switch(wirelessSignalStatus){
+//    case NO_SIGNAL:
+//        qDebug()<<"no signal.";break;
+//    case BAD_SIGNAL:
+//        qDebug()<<"bad signal.";break;
+//    case GOOD_SIGNAL:
+//        qDebug()<<"good signal.";break;
+//    default:
+//        qDebug()<<"I dont know whats up.";
+//    }
+
+//    ES_GetContactQualityFromAllChannels(eState, contactQuality, 14);
+//    EE_EEG_ContactQuality_t tmp= ES_GetContactQuality(eState, 3);
+//    qDebug()<<"channel 3: "<<tmp;
 }
 
 void ECEngine::computeFFT(){
-    qDebug()<<"---- computeFFT  ----";
-    fft_AF3 = fft(rawBuffer_AF3);//charge Emotiv..
-    qDebug()<<"compute over";
-    for(int i=0;i<5;i++)
-    qDebug()<<(double)fft_AF3[i].real()<<" "<<(double)fft_AF3[i].imag();
-    fft_AF4 = fft(rawBuffer_AF4);
-    for(int i=0;i<5;i++)
-    qDebug()<<fft_AF4[i].real()<<" "<<fft_AF4[i].imag();
-    qDebug()<<"---------";
+//    qDebug()<<"---- computeFFT  ----";
+//    fft_AF3 = fft(rawBuffer_AF3);//charge Emotiv..
+//    qDebug()<<"compute over";
+//    for(int i=0;i<5;i++)
+//    qDebug()<<(double)fft_AF3[i].real()<<" "<<(double)fft_AF3[i].imag();
+//    fft_AF4 = fft(rawBuffer_AF4);
+//    for(int i=0;i<5;i++)
+//    qDebug()<<fft_AF4[i].real()<<" "<<fft_AF4[i].imag();
+//    qDebug()<<"---------";
 }
