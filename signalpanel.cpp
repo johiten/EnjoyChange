@@ -59,7 +59,7 @@ void SignalPanel::paintEvent(QPaintEvent *event){
 
 void SignalPanel::paintOneChannel(Vector<double> v, int pos, QPainter &painter){
     if(v.size()==0)return;
-    int yOffset = pos*50;
+    int yOffset = pos*100;
     int pre = v[0];
     for(int i=1;i<v.size();i++){
         painter.drawLine(15*i-15,yOffset+pre*3,15*i,yOffset+3*v[i]);
