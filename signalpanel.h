@@ -5,6 +5,8 @@
 #include <vector>
 #include <QPainter>
 #include <QTimer>
+#include "spppinclude/vector.h"
+#include "spppinclude/vectormath.h"
 class ECEngine;
 
 namespace Ui {
@@ -25,9 +27,9 @@ private:
     ECEngine *enginePoint;
 
     void paintEvent(QPaintEvent *event);
+    void paintOneChannel(splab::Vector<double> v, int num, QPainter &painter);
 
 public slots:
-    void myUpdate();
 };
 
 #endif // SIGNALPANEL_H

@@ -9,17 +9,19 @@ MainWindow::MainWindow(QWidget *parent) :
     engine(new ECEngine),
     signalPanel(new SignalPanel),
     brainPowerPanel(new BrainPowerPanel),
-    training(new Training),
+    //training(new Training),
     deviceInfoPanel(new DeviceInfoPanel)
 {
     ui->setupUi(this);
     signalPanel->linkEngine(engine);
     //connect(engine->timer_1s_1,SIGNAL(timeout()),signalPanel,SLOT(update()));
 /////////////////////    set layout and add widgets
-    ui->verticalLayout->addWidget(signalPanel);
+    ui->gridLayout->addWidget(signalPanel, 1, 2, 1, 2);
+    ui->gridLayout->addWidget(brainPowerPanel, 2, 1);
+    ui->gridLayout->addWidget(deviceInfoPanel, 1, 1);
     //this->setLayout(ui->verticalLayout);
 /////////////////////    connect signals with slots
-    //connect(engine->timer_1s_1, SIGNAL(timeout()), signalPanel, SLOT(update()));
+    connect(engine->timer_1s_1, SIGNAL(timeout()), signalPanel, SLOT(update()));
 
 }
 
