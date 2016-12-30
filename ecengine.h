@@ -8,11 +8,14 @@
 #include "spppinclude/vector.h"
 #include "complex.h"
 #include <QTimer>
+#include <deque>
 using namespace std;
 using namespace splab;
 
 #define SAMPLETIMEMS 1000
 //采样时间固定为1s,能保证0~64Hz中1Hz的分辨率。
+#define REALTIMEUPDATETIME 8
+//30fps is good enough for this application, so every 33 ms checks the update
 
 class ECEngine : public QObject
 {
@@ -27,9 +30,12 @@ public:
 
 signals:
     void bufferUpdated();
+    void DQUpdated(int i);
+    void buffer128();
 
 public slots:
     void updateBuffer();//SLOT
+    void updateDQ();
     void updateDeviceInfo();//battery and other infoes.
     void computeFFT();
 
@@ -52,13 +58,12 @@ private:
     double *            bufferHead[16];
     double  bufferAF3[520],bufferF7[520],bufferF3[520],bufferFC5[520],bufferT7[520],bufferP7[520],bufferO1[520],
             bufferAF4[520],bufferF8[520],bufferF4[520],bufferFC6[520],bufferT8[520],bufferP8[520],bufferO2[520];
-    double baseLineAF3, baseLineAF4,
-        baseLineF7,baseLineF8,
-        baseLineF3,baseLineF4,
-        baseLineFC5,baseLineFC6,
-        baseLineT7,baseLineT8,
-        baseLineP7,baseLineP8,
-        baseLineO1,baseLineO2;
+    double  bufferAF3x[150],bufferF7x[150],bufferF3x[150],bufferFC5x[150],bufferT7x[150],bufferP7x[150],bufferO1x[150],
+            bufferAF4x[150],bufferF8x[150],bufferF4x[150],bufferFC6x[150],bufferT8x[150],bufferP8x[150],bufferO2x[150];
+
+    deque<double> dqAF3, dqAF4, dqF3, dqF4, dqF7, dqF8, dqFC5, dqFC6, dqT7, dqT8, dqP7, dqP8, dqO1, dqO2;//for painting
+    double sumOfAF3, sumOfAF4, sumOfF3, sumOfF4, sumOfF7, sumOfF8, sumOfFC5, sumOfFC6, sumOfT7, sumOfT8, sumOfP7, sumOfP8, sumOfO1, sumOfO2;//for baselineCorrecting
+    int bufferCount;
 
 public:
     Vector<double>      rawBuffer_AF3;
@@ -90,7 +95,16 @@ public:
     Vector<double>      rawBuffer_AF4;
     Vector<complex<double> >  fft_AF4;
 
-    QTimer *timer_1s_1;//used for getting data into bufferXX
+    QTimer *timer_1s_1;
+    QTimer *timerDQUpdate;
+
+    double baseLineAF3, baseLineAF4,
+        baseLineF7,baseLineF8,
+        baseLineF3,baseLineF4,
+        baseLineFC5,baseLineFC6,
+        baseLineT7,baseLineT8,
+        baseLineP7,baseLineP8,
+        baseLineO1,baseLineO2;
 };
 
 #endif // ECENGINE_H

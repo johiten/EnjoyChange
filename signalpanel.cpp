@@ -29,40 +29,28 @@ void SignalPanel::linkEngine(ECEngine *p){
 void SignalPanel::paintEvent(QPaintEvent *event){
     QPainter painter(this);
     painter.setPen(QPen(Qt::black, 1, Qt::SolidLine));
-    paintOneChannel(enginePoint->rawBuffer_AF3, 1, painter);
+    paintOneChannel(enginePoint->rawBuffer_AF3, enginePoint->baseLineAF3, 1, painter);
 
     painter.setPen(QPen(Qt::red, 1, Qt::SolidLine));
-    paintOneChannel(enginePoint->rawBuffer_AF4, 2, painter);
+    paintOneChannel(enginePoint->rawBuffer_AF4, enginePoint->baseLineAF4, 2, painter);
 
     painter.setPen(QPen(Qt::blue, 1, Qt::SolidLine));
-    paintOneChannel(enginePoint->rawBuffer_O1, 3, painter);
+    paintOneChannel(enginePoint->rawBuffer_O1, enginePoint->baseLineO1, 3, painter);
 
     painter.setPen(QPen(Qt::green, 1, Qt::SolidLine));
-    paintOneChannel(enginePoint->rawBuffer_O2, 4, painter);
+    paintOneChannel(enginePoint->rawBuffer_O2, enginePoint->baseLineO2, 4, painter);
 
     painter.setPen(QPen(Qt::yellow, 1, Qt::SolidLine));
-    paintOneChannel(enginePoint->rawBuffer_T7, 5, painter);
+    paintOneChannel(enginePoint->rawBuffer_T7, enginePoint->baseLineT7, 5, painter);
 
-
-
-
-//    if(enginePoint->rawBuffer_AF3.size()==0) return;
-//    int pre = enginePoint->rawBuffer_AF3[0];
-//    for(int i=1;i<enginePoint->rawBuffer_AF3.size();i++){
-//        painter.drawLine(15*i-15,50+pre*3,15*i,50+3*enginePoint->rawBuffer_AF3[i]);
-//        painter.drawLine(15*i-15,10+pre*3,15*i,10+3*enginePoint->rawBuffer_AF3[i]);
-//        pre = enginePoint->rawBuffer_AF3[i];
-//        //qDebug()<<data[i];
-//    }
-    //qDebug()<<"painted...";
 }
 
-void SignalPanel::paintOneChannel(Vector<double> v, int pos, QPainter &painter){
+void SignalPanel::paintOneChannel(Vector<double> v, double baseLine, int pos, QPainter &painter){
     if(v.size()==0)return;
     int yOffset = pos*100;
-    int pre = v[0];
+    int pre = v[0]-baseLine;
     for(int i=1;i<v.size();i++){
-        painter.drawLine(15*i-15,yOffset+pre*3,15*i,yOffset+3*v[i]);
-        pre = v[i];
+        painter.drawLine(15*i-15,yOffset+pre*3,15*i,yOffset+3*(v[i]-baseLine));
+        pre = v[i]-baseLine;
     }
 }

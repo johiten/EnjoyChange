@@ -27,7 +27,7 @@ private:
     ECEngine *enginePoint;
 
     void paintEvent(QPaintEvent *event);
-    void paintOneChannel(splab::Vector<double> v, int num, QPainter &painter);
+    void paintOneChannel(splab::Vector<double> v, double baseLine, int num, QPainter &painter);
 
 public slots:
 };
