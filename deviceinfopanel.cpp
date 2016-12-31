@@ -1,5 +1,7 @@
 #include "deviceinfopanel.h"
 #include "ui_deviceinfopanel.h"
+#include <QLabel>
+#include <QPixmap>
 
 DeviceInfoPanel::DeviceInfoPanel(QWidget *parent) :
     QWidget(parent),

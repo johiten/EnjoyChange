@@ -6,27 +6,32 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>149</width>
-    <height>144</height>
+    <width>400</width>
+    <height>430</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>10</y>
-     <width>131</width>
-     <height>121</height>
+     <x>30</x>
+     <y>90</y>
+     <width>241</width>
+     <height>151</height>
     </rect>
    </property>
    <property name="text">
-    <string>BrainPower</string>
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap resource="resource.qrc">:/image/image/contactQuality.png</pixmap>
    </property>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="resource.qrc"/>
+ </resources>
  <connections/>
 </ui>

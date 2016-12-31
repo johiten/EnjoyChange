@@ -16,7 +16,6 @@ SignalPanel::SignalPanel(QWidget *parent) :
     ui(new Ui::SignalPanel)
 {
     ui->setupUi(this);
-
 }
 
 SignalPanel::~SignalPanel()
@@ -29,7 +28,6 @@ void SignalPanel::linkEngine(ECEngine *p){
 }
 
 void SignalPanel::paintEvent(QPaintEvent *event){
-    //qDebug()<<"update...";
     int pos = enginePoint->bufferCount-640;
     if(pos<0){
         pos+=640;
@@ -62,7 +60,7 @@ void SignalPanel::paintEvent(QPaintEvent *event){
 void SignalPanel::paintOneChannel(double *signal, double baseLine, int pos, int row, QPainter &painter){
     //qDebug()<<"paintOneChannel: "<<v[0]-baseLine<<"  "<<pos;
 
-    int yOffset = row*80+20;
+    int yOffset = row*60+20;
     int pre = signal[pos]-baseLine;//qDebug()<<pre<<"  "<<baseLine;
     for(int i=1;i<640;i++){
         painter.drawLine(2*i-2,yOffset+pre,2*i,yOffset+signal[i+pos]-baseLine);

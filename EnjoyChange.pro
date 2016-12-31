@@ -226,3 +226,6 @@ DISTFILES += \
     .gitignore \
     README.md
 INCLUDEPATH += $$PWD/include/spppinclude
+
+RESOURCES += \
+    resource.qrc
