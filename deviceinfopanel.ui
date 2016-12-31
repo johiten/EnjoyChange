@@ -22,6 +22,25 @@
      <height>16</height>
     </rect>
    </property>
+   <property name="styleSheet">
+    <string notr="true">QCheckBox{
+    width: 26px;
+    height: 50px;
+}
+
+
+QCheckBox::indicator{
+    width: 50px;
+    height: 50px;
+}
+
+QCheckBox::indicator:unchecked{
+    image:url(qrc:/image/image/channelUnchecked.png);
+
+}
+
+</string>
+   </property>
    <property name="text">
     <string>AF3</string>
    </property>
@@ -198,8 +217,8 @@
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>60</x>
-     <y>60</y>
+     <x>80</x>
+     <y>70</y>
      <width>261</width>
      <height>271</height>
     </rect>

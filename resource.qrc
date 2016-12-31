@@ -3,4 +3,7 @@
         <file>image/contactQuality.png</file>
         <file>image/channelUnchecked.png</file>
     </qresource>
+    <qresource prefix="/qss">
+        <file>qss/checkbox.qss</file>
+    </qresource>
 </RCC>

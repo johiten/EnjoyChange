@@ -1,0 +1,13 @@
+QCheckBox{
+    spacing: 5px;
+}
+
+QCheckBox::indicator{
+    width: 15px;
+    height: 15px;
+}
+
+QCheckBox::indicator:unchecked{
+    image:url(:/image/channelUnchecked.png);
+}
+

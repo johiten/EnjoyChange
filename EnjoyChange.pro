@@ -224,7 +224,8 @@ DISTFILES += \
     .swp \
     .gitattributes \
     .gitignore \
-    README.md
+    README.md \
+    qss/checkbox.qss
 INCLUDEPATH += $$PWD/include/spppinclude
 
 RESOURCES += \
