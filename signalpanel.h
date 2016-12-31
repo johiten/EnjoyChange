@@ -2,7 +2,6 @@
 #define SIGNALPANEL_H
 
 #include <QWidget>
-#include <vector>
 #include <QPainter>
 #include <QTimer>
 #include "spppinclude/vector.h"
@@ -27,7 +26,7 @@ private:
     ECEngine *enginePoint;
 
     void paintEvent(QPaintEvent *event);
-    void paintOneChannel(splab::Vector<double> v, double baseLine, int num, QPainter &painter);
+    void paintOneChannel(double *, double , int , int , QPainter &painter);
 
 public slots:
 };

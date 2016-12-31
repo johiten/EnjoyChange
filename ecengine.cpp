@@ -9,6 +9,9 @@
 #include "spppinclude/vectormath.h"
 #include "spppinclude/fft.h"
 #include <deque>
+
+#define BUFFEROFFSET 640
+//128*5=640
 using namespace std;
 using namespace splab;
 
@@ -23,10 +26,6 @@ void mypause(int ms){
     t.start();
     while(t.elapsed()<ms)
         QCoreApplication::processEvents();
-}
-
-void ECEngine::start(){
-    initEngine();
 }
 
 ECEngine::ECEngine(QObject *parent)://构造函数，初始化那几个简单的变量
@@ -62,15 +61,7 @@ void ECEngine::initEngine(){
     bufferHead[12]=bufferF8;
     bufferHead[13]=bufferAF4;
 
-    dqAF3.resize(128, 4000.0);dqAF4.resize(128, 4000.0);
-    dqF3.resize(128, 4000.0);dqF4.resize(128, 4000.0);
-    dqF7.resize(128, 4000.0);dqF8.resize(128, 4000.0);
-    dqFC5.resize(128, 4000.0);dqFC6.resize(128, 4000.0);
-    dqT7.resize(128, 4000.0);dqT8.resize(128, 4000.0);
-    dqP7.resize(128, 4000.0);dqP8.resize(128, 4000.0);
-    dqO1.resize(128, 4000.0);dqO2.resize(128, 4000.0);
-
-    sumOfAF3=sumOfAF4=sumOfF3=sumOfF4=sumOfF7=sumOfF8=sumOfFC5=sumOfFC6=sumOfT7=sumOfT8=sumOfP7=sumOfP8=sumOfO1=sumOfO2=128*4000;
+    sumOfAF3=sumOfAF4=sumOfF3=sumOfF4=sumOfF7=sumOfF8=sumOfFC5=sumOfFC6=sumOfT7=sumOfT8=sumOfP7=sumOfP8=sumOfO1=sumOfO2=0;
 
     while(EE_EngineConnect()!=EDK_OK){
         mypause(300);
@@ -95,32 +86,32 @@ void ECEngine::initEngine(){
     }
 
     timer_1s_1 = new QTimer(this);
-    timerDQUpdate = new QTimer(this);
-    connect( timerDQUpdate, SIGNAL(timeout()), this, SLOT(updateDQ()));
+    timerFrameUpdate = new QTimer(this);
+    connect( timerFrameUpdate, SIGNAL(timeout()), this, SLOT(updateDQ()));
     //connect( timer_1s_1, SIGNAL(timeout()), this, SLOT(updateBuffer()) );
-    connect( timer_1s_1, SIGNAL(timeout()), this, SLOT(updateDeviceInfo()) );
-    timerDQUpdate->start(REALTIMEUPDATETIME);
-    timer_1s_1->start(SAMPLETIMEMS);
+    //connect( timer_1s_1, SIGNAL(timeout()), this, SLOT(updateDeviceInfo()) );
+    timerFrameUpdate->start(REALTIMEUPDATETIME);
+    //timer_1s_1->start(SAMPLETIMEMS);
 
-    connect( this, SIGNAL(bufferUpdated()), this, SLOT(computeFFT()));
+    //connect( this, SIGNAL(bufferUpdated()), this, SLOT(computeFFT()));
 }
 
 
-void ECEngine::baseLineCorrect(){
-    baseLineAF3 = sumOfAF3/128;   rawBuffer_AF3 -= baseLineAF3;
-    baseLineAF4 = sumOfAF4/128;   rawBuffer_AF4 -= baseLineAF4;
-    baseLineF7 = sumOfF7/128;     rawBuffer_F7 -= baseLineF7;
-    baseLineF8 = sumOfF8/128;     rawBuffer_F8 -= baseLineF8;
-    baseLineF3 = sumOfF3/128;     rawBuffer_F3 -= baseLineF3;
-    baseLineF4 = sumOfF4/128;     rawBuffer_F4 -= baseLineF4;
-    baseLineFC5 = sumOfFC5/128;   rawBuffer_FC5 -= baseLineFC5;
-    baseLineFC6 = sumOfFC6/128;   rawBuffer_FC6 -= baseLineFC6;
-    baseLineT7 = sumOfT7/128;     rawBuffer_T7 -= baseLineT7;
-    baseLineT8 = sumOfT8/128;     rawBuffer_T8 -= baseLineT8;
-    baseLineP7 = sumOfP7/128;     rawBuffer_P7 -= baseLineP7;
-    baseLineP8 = sumOfP8/128;     rawBuffer_P8 -= baseLineP8;
-    baseLineO1 = sumOfO1/128;     rawBuffer_O1 -= baseLineO1;
-    baseLineO2 = sumOfO2/128;     rawBuffer_O2 -= baseLineO2;
+void ECEngine::computeBaseLine(){
+    baseLineAF3 = sumOfAF3/640;   //rawBuffer_AF3 -= baseLineAF3;
+    baseLineAF4 = sumOfAF4/640;   //rawBuffer_AF4 -= baseLineAF4;
+    baseLineF7 = sumOfF7/640;     //rawBuffer_F7 -= baseLineF7;
+    baseLineF8 = sumOfF8/640;     //rawBuffer_F8 -= baseLineF8;
+    baseLineF3 = sumOfF3/640;     //rawBuffer_F3 -= baseLineF3;
+    baseLineF4 = sumOfF4/640;     //rawBuffer_F4 -= baseLineF4;
+    baseLineFC5 = sumOfFC5/640;   //rawBuffer_FC5 -= baseLineFC5;
+    baseLineFC6 = sumOfFC6/640;   //rawBuffer_FC6 -= baseLineFC6;
+    baseLineT7 = sumOfT7/640;     //rawBuffer_T7 -= baseLineT7;
+    baseLineT8 = sumOfT8/640;     //rawBuffer_T8 -= baseLineT8;
+    baseLineP7 = sumOfP7/640;     //rawBuffer_P7 -= baseLineP7;
+    baseLineP8 = sumOfP8/640;     //rawBuffer_P8 -= baseLineP8;
+    baseLineO1 = sumOfO1/640;     //rawBuffer_O1 -= baseLineO1;
+    baseLineO2 = sumOfO2/640;     //rawBuffer_O2 -= baseLineO2;
 }
 
 void ECEngine::updateDQ(){
@@ -128,78 +119,198 @@ void ECEngine::updateDQ(){
         EE_DataUpdateHandle(0, hData);
         EE_DataGetNumberOfSample(hData,&nSamplesTaken);
 
-        qDebug() << "Updated buffer: " << nSamplesTaken;
+        //qDebug() << "Updated buffer: " << nSamplesTaken;
 
         if (nSamplesTaken > 0) {
-            EE_DataGetMultiChannels(hData, targetChannelList, 14, bufferHead, nSamplesTaken);
+            EE_DataGetMultiChannels(hData, targetChannelList, 14, bufferHead, nSamplesTaken);//get data
             for(int i=0;i<nSamplesTaken;i++){
-                sumOfAF3 += bufferHead[0][i];  dqAF3.push_back(bufferHead[0][i]);sumOfAF3 -=dqAF3.front();  dqAF3.pop_front();  bufferAF3x[bufferCount+i]=bufferHead[0][i];
-                sumOfF7  += bufferHead[1][i];  dqF7.push_back(bufferHead[1][i]); sumOfF7  -=dqF7.front();   dqF7.pop_front();   bufferF7x[bufferCount+i]=bufferHead[1][i];
-                sumOfF3  += bufferHead[2][i];  dqF3.push_back(bufferHead[2][i]); sumOfF3  -=dqF3.front();   dqF3.pop_front();   bufferF3x[bufferCount+i]=bufferHead[2][i];
-                sumOfFC5 += bufferHead[3][i];  dqFC5.push_back(bufferHead[3][i]);sumOfFC5 -=dqFC5.front();  dqFC5.pop_front();  bufferFC5x[bufferCount+i]=bufferHead[3][i];
-                sumOfT7  += bufferHead[4][i];  dqT7.push_back(bufferHead[4][i]); sumOfT7  -=dqT7.front();   dqT7.pop_front();   bufferT7x[bufferCount+i]=bufferHead[4][i];
-                sumOfP7  += bufferHead[5][i];  dqP7.push_back(bufferHead[5][i]); sumOfP7  -=dqP7.front();   dqP7.pop_front();   bufferP7x[bufferCount+i]=bufferHead[5][i];
-                sumOfO1  += bufferHead[6][i];  dqO1.push_back(bufferHead[6][i]); sumOfO1  -=dqO1.front();   dqO1.pop_front();   bufferO1x[bufferCount+i]=bufferHead[6][i];
-                sumOfO2  += bufferHead[7][i];  dqO2.push_back(bufferHead[7][i]); sumOfO2  -=dqO2.front();   dqO2.pop_front();   bufferO2x[bufferCount+i]=bufferHead[7][i];
-                sumOfP8  += bufferHead[8][i];  dqP8.push_back(bufferHead[8][i]); sumOfP8  -=dqP8.front();   dqP8.pop_front();   bufferP8x[bufferCount+i]=bufferHead[8][i];
-                sumOfT8  += bufferHead[9][i];  dqT8.push_back(bufferHead[9][i]); sumOfT8  -=dqT8.front();   dqT8.pop_front();   bufferT8x[bufferCount+i]=bufferHead[9][i];
-                sumOfFC6 += bufferHead[10][i]; dqFC6.push_back(bufferHead[10][i]);sumOfFC6-=dqFC6.front();  dqFC6.pop_front();  bufferFC6x[bufferCount+i]=bufferHead[10][i];
-                sumOfF4  += bufferHead[11][i]; dqF4.push_back(bufferHead[11][i]);sumOfF4  -=dqF4.front();   dqF4.pop_front();   bufferF4x[bufferCount+i]=bufferHead[11][i];
-                sumOfF8  += bufferHead[12][i]; dqF8.push_back(bufferHead[12][i]);sumOfF8  -=dqF8.front();   dqF8.pop_front();   bufferF8x[bufferCount+i]=bufferHead[12][i];
-                sumOfAF4 += bufferHead[13][i]; dqAF4.push_back(bufferHead[13][i]);sumOfAF4-=dqAF4.front();  dqAF4.pop_front();  bufferAF4x[bufferCount+i]=bufferHead[13][i];
+                if(bufferCount+i<=640){
+                    sumOfAF3 += bufferAF3[i];sumOfAF3 -= bufferAF3x[bufferCount+i];
+                    bufferAF3x[bufferCount+i+BUFFEROFFSET] = bufferAF3x[bufferCount+i] = bufferAF3[i];
 
+                    sumOfF7 += bufferF7[i];sumOfF7 -= bufferF7x[bufferCount+i];
+                    bufferF7x[bufferCount+i+BUFFEROFFSET] = bufferF7x[bufferCount+i] = bufferF7[i];
 
+                    sumOfF3 += bufferF3[i];sumOfF3 -= bufferF3x[bufferCount+i];
+                    bufferF3x[bufferCount+i+BUFFEROFFSET] = bufferF3x[bufferCount+i] = bufferF3[i];
+
+                    sumOfFC5 += bufferFC5[i];sumOfFC5 -= bufferFC5x[bufferCount+i];
+                    bufferFC5x[bufferCount+i+BUFFEROFFSET] = bufferFC5x[bufferCount+i] = bufferFC5[i];
+
+                    sumOfT7 += bufferT7[i];sumOfT7 -= bufferT7x[bufferCount+i];
+                    bufferT7x[bufferCount+i+BUFFEROFFSET] = bufferT7x[bufferCount+i] = bufferT7[i];
+
+                    sumOfP7 += bufferP7[i];sumOfP7 -= bufferP7x[bufferCount+i];
+                    bufferP7x[bufferCount+i+BUFFEROFFSET] = bufferP7x[bufferCount+i] = bufferP7[i];
+
+                    sumOfO1 += bufferO1[i];sumOfO1 -= bufferO1x[bufferCount+i];
+                    bufferO1x[bufferCount+i+BUFFEROFFSET] = bufferO1x[bufferCount+i] = bufferO1[i];
+
+                    sumOfAF4 += bufferAF4[i];sumOfAF4 -= bufferAF4x[bufferCount+i];
+                    bufferAF4x[bufferCount+i+BUFFEROFFSET] = bufferAF4x[bufferCount+i] = bufferAF4[i];
+
+                    sumOfF8 += bufferF8[i];sumOfF8 -= bufferF8x[bufferCount+i];
+                    bufferF8x[bufferCount+i+BUFFEROFFSET] = bufferF8x[bufferCount+i] = bufferF8[i];
+
+                    sumOfF4 += bufferF4[i];sumOfF4 -= bufferF4x[bufferCount+i];
+                    bufferF4x[bufferCount+i+BUFFEROFFSET] = bufferF4x[bufferCount+i] = bufferF4[i];
+
+                    sumOfFC6 += bufferFC6[i];sumOfFC6 -= bufferFC6x[bufferCount+i];
+                    bufferFC6x[bufferCount+i+BUFFEROFFSET] = bufferFC6x[bufferCount+i] = bufferFC6[i];
+
+                    sumOfT8 += bufferT8[i];sumOfT8 -= bufferT8x[bufferCount+i];
+                    bufferT8x[bufferCount+i+BUFFEROFFSET] = bufferT8x[bufferCount+i] = bufferT8[i];
+
+                    sumOfP8 += bufferP8[i];sumOfP8 -= bufferP8x[bufferCount+i];
+                    bufferP8x[bufferCount+i+BUFFEROFFSET] = bufferP8x[bufferCount+i] = bufferP8[i];
+
+                    sumOfO2 += bufferO2[i];sumOfO2 -= bufferO2x[bufferCount+i];
+                    bufferO2x[bufferCount+i+BUFFEROFFSET] = bufferO2x[bufferCount+i] = bufferO2[i];
+                }
+                else{
+                    sumOfAF3 += bufferAF3[i];sumOfAF3 -= bufferAF3x[bufferCount+i];
+                    bufferAF3x[bufferCount+i] = bufferAF3x[bufferCount+i-BUFFEROFFSET] = bufferAF3[i];
+
+                    sumOfF7 += bufferF7[i];sumOfF7 -= bufferF7x[bufferCount+i];
+                    bufferF7x[bufferCount+i] = bufferF7x[bufferCount+i-BUFFEROFFSET] = bufferF7[i];
+
+                    sumOfF3 += bufferF3[i];sumOfF3 -= bufferF3x[bufferCount+i];
+                    bufferF3x[bufferCount+i] = bufferF3x[bufferCount+i-BUFFEROFFSET] = bufferF3[i];
+
+                    sumOfFC5 += bufferFC5[i];sumOfFC5 -= bufferFC5x[bufferCount+i];
+                    bufferFC5x[bufferCount+i] = bufferFC5x[bufferCount+i-BUFFEROFFSET] = bufferFC5[i];
+
+                    sumOfT7 += bufferT7[i];sumOfT7 -= bufferT7x[bufferCount+i];
+                    bufferT7x[bufferCount+i] = bufferT7x[bufferCount+i-BUFFEROFFSET] = bufferT7[i];
+
+                    sumOfP7 += bufferP7[i];sumOfP7 -= bufferP7x[bufferCount+i];
+                    bufferP7x[bufferCount+i] = bufferP7x[bufferCount+i-BUFFEROFFSET] = bufferP7[i];
+
+                    sumOfO1 += bufferO1[i];sumOfO1 -= bufferO1x[bufferCount+i];
+                    bufferO1x[bufferCount+i] = bufferO1x[bufferCount+i-BUFFEROFFSET] = bufferO1[i];
+
+                    sumOfAF4 += bufferAF4[i];sumOfAF4 -= bufferAF4x[bufferCount+i];
+                    bufferAF4x[bufferCount+i] = bufferAF4x[bufferCount+i-BUFFEROFFSET] = bufferAF4[i];
+
+                    sumOfF8 += bufferF8[i];sumOfF8 -= bufferF8x[bufferCount+i];
+                    bufferF8x[bufferCount+i] = bufferF8x[bufferCount+i-BUFFEROFFSET] = bufferF8[i];
+
+                    sumOfF4 += bufferF4[i];sumOfF4 -= bufferF4x[bufferCount+i];
+                    bufferAF4x[bufferCount+i] = bufferAF4x[bufferCount+i-BUFFEROFFSET] = bufferF4[i];
+
+                    sumOfFC6 += bufferFC6[i];sumOfFC6 -= bufferFC6x[bufferCount+i];
+                    bufferFC6x[bufferCount+i] = bufferFC6x[bufferCount+i-BUFFEROFFSET] = bufferFC6[i];
+
+                    sumOfT8 += bufferT8[i];sumOfT8 -= bufferT8x[bufferCount+i];
+                    bufferT8x[bufferCount+i] = bufferT8x[bufferCount+i-BUFFEROFFSET] = bufferT8[i];
+
+                    sumOfP8 += bufferP8[i];sumOfP8 -= bufferP8x[bufferCount+i];
+                    bufferP8x[bufferCount+i] = bufferP8x[bufferCount+i-BUFFEROFFSET] = bufferP8[i];
+
+                    sumOfO2 += bufferO2[i];sumOfO2 -= bufferO2x[bufferCount+i];
+                    bufferO2x[bufferCount+i] = bufferO2x[bufferCount+i-BUFFEROFFSET] = bufferO2[i];
+                }
+            }
+
+            int offset2=0;
+            if(bufferCount<128&&bufferCount+nSamplesTaken>=128){
+                offset2 = 640;
+                rawBuffer_AF3 = Vector<double>(128, bufferAF3x+offset2);
+                rawBuffer_F7  = Vector<double>(128, bufferF7x+offset2);
+                rawBuffer_F3  = Vector<double>(128, bufferF3x+offset2);
+                rawBuffer_FC5 = Vector<double>(128, bufferFC5x+offset2);
+                rawBuffer_T7  = Vector<double>(128, bufferT7x+offset2);
+                rawBuffer_P7  = Vector<double>(128, bufferP7x+offset2);
+                rawBuffer_O1  = Vector<double>(128, bufferO1x+offset2);
+                rawBuffer_O2  = Vector<double>(128, bufferO2x+offset2);
+                rawBuffer_P8  = Vector<double>(128, bufferP8x+offset2);
+                rawBuffer_T8  = Vector<double>(128, bufferT8x+offset2);
+                rawBuffer_FC6 = Vector<double>(128, bufferFC6x+offset2);
+                rawBuffer_F4  = Vector<double>(128, bufferF4x+offset2);
+                rawBuffer_F8  = Vector<double>(128, bufferF8x+offset2);
+                rawBuffer_AF4 = Vector<double>(128, bufferAF4x+offset2);
+                computeBaseLine();
+                emit buffer128();
+            }
+            else if(bufferCount<256&&bufferCount+nSamplesTaken>=256){
+                offset2=128;
+                rawBuffer_AF3 = Vector<double>(128, bufferAF3x+offset2);
+                rawBuffer_F7  = Vector<double>(128, bufferF7x+offset2);
+                rawBuffer_F3  = Vector<double>(128, bufferF3x+offset2);
+                rawBuffer_FC5 = Vector<double>(128, bufferFC5x+offset2);
+                rawBuffer_T7  = Vector<double>(128, bufferT7x+offset2);
+                rawBuffer_P7  = Vector<double>(128, bufferP7x+offset2);
+                rawBuffer_O1  = Vector<double>(128, bufferO1x+offset2);
+                rawBuffer_O2  = Vector<double>(128, bufferO2x+offset2);
+                rawBuffer_P8  = Vector<double>(128, bufferP8x+offset2);
+                rawBuffer_T8  = Vector<double>(128, bufferT8x+offset2);
+                rawBuffer_FC6 = Vector<double>(128, bufferFC6x+offset2);
+                rawBuffer_F4  = Vector<double>(128, bufferF4x+offset2);
+                rawBuffer_F8  = Vector<double>(128, bufferF8x+offset2);
+                rawBuffer_AF4 = Vector<double>(128, bufferAF4x+offset2);
+                computeBaseLine();
+                emit buffer128();
+            }
+            else if(bufferCount<384&&bufferCount+nSamplesTaken>=384){
+                offset2=256;
+                rawBuffer_AF3 = Vector<double>(128, bufferAF3x+offset2);
+                rawBuffer_F7  = Vector<double>(128, bufferF7x+offset2);
+                rawBuffer_F3  = Vector<double>(128, bufferF3x+offset2);
+                rawBuffer_FC5 = Vector<double>(128, bufferFC5x+offset2);
+                rawBuffer_T7  = Vector<double>(128, bufferT7x+offset2);
+                rawBuffer_P7  = Vector<double>(128, bufferP7x+offset2);
+                rawBuffer_O1  = Vector<double>(128, bufferO1x+offset2);
+                rawBuffer_O2  = Vector<double>(128, bufferO2x+offset2);
+                rawBuffer_P8  = Vector<double>(128, bufferP8x+offset2);
+                rawBuffer_T8  = Vector<double>(128, bufferT8x+offset2);
+                rawBuffer_FC6 = Vector<double>(128, bufferFC6x+offset2);
+                rawBuffer_F4  = Vector<double>(128, bufferF4x+offset2);
+                rawBuffer_F8  = Vector<double>(128, bufferF8x+offset2);
+                rawBuffer_AF4 = Vector<double>(128, bufferAF4x+offset2);
+                computeBaseLine();
+                emit buffer128();
+            }
+            else if(bufferCount<512&&bufferCount+nSamplesTaken>=512){
+                offset2=384;
+                rawBuffer_AF3 = Vector<double>(128, bufferAF3x+offset2);
+                rawBuffer_F7  = Vector<double>(128, bufferF7x+offset2);
+                rawBuffer_F3  = Vector<double>(128, bufferF3x+offset2);
+                rawBuffer_FC5 = Vector<double>(128, bufferFC5x+offset2);
+                rawBuffer_T7  = Vector<double>(128, bufferT7x+offset2);
+                rawBuffer_P7  = Vector<double>(128, bufferP7x+offset2);
+                rawBuffer_O1  = Vector<double>(128, bufferO1x+offset2);
+                rawBuffer_O2  = Vector<double>(128, bufferO2x+offset2);
+                rawBuffer_P8  = Vector<double>(128, bufferP8x+offset2);
+                rawBuffer_T8  = Vector<double>(128, bufferT8x+offset2);
+                rawBuffer_FC6 = Vector<double>(128, bufferFC6x+offset2);
+                rawBuffer_F4  = Vector<double>(128, bufferF4x+offset2);
+                rawBuffer_F8  = Vector<double>(128, bufferF8x+offset2);
+                rawBuffer_AF4 = Vector<double>(128, bufferAF4x+offset2);
+                computeBaseLine();
+                emit buffer128();
+            }
+            else if(bufferCount<640&&bufferCount+nSamplesTaken>=640){
+                offset2=512;
+                rawBuffer_AF3 = Vector<double>(128, bufferAF3x+offset2);
+                rawBuffer_F7  = Vector<double>(128, bufferF7x+offset2);
+                rawBuffer_F3  = Vector<double>(128, bufferF3x+offset2);
+                rawBuffer_FC5 = Vector<double>(128, bufferFC5x+offset2);
+                rawBuffer_T7  = Vector<double>(128, bufferT7x+offset2);
+                rawBuffer_P7  = Vector<double>(128, bufferP7x+offset2);
+                rawBuffer_O1  = Vector<double>(128, bufferO1x+offset2);
+                rawBuffer_O2  = Vector<double>(128, bufferO2x+offset2);
+                rawBuffer_P8  = Vector<double>(128, bufferP8x+offset2);
+                rawBuffer_T8  = Vector<double>(128, bufferT8x+offset2);
+                rawBuffer_FC6 = Vector<double>(128, bufferFC6x+offset2);
+                rawBuffer_F4  = Vector<double>(128, bufferF4x+offset2);
+                rawBuffer_F8  = Vector<double>(128, bufferF8x+offset2);
+                rawBuffer_AF4 = Vector<double>(128, bufferAF4x+offset2);
+                computeBaseLine();
+                emit buffer128();
             }
             bufferCount+=nSamplesTaken;
-            if(bufferCount>=128){
-                bufferCount=0;
-                rawBuffer_AF3 = Vector<double>(128, bufferAF3x);
-                rawBuffer_F7  = Vector<double>(128, bufferF7x);
-                rawBuffer_F3  = Vector<double>(128, bufferF3x);
-                rawBuffer_FC5 = Vector<double>(128, bufferFC5x);
-                rawBuffer_T7  = Vector<double>(128, bufferT7x);
-                rawBuffer_P7  = Vector<double>(128, bufferP7x);
-                rawBuffer_O1  = Vector<double>(128, bufferO1x);
-                rawBuffer_O2  = Vector<double>(128, bufferO2x);
-                rawBuffer_P8  = Vector<double>(128, bufferP8x);
-                rawBuffer_T8  = Vector<double>(128, bufferT8x);
-                rawBuffer_FC6 = Vector<double>(128, bufferFC6x);
-                rawBuffer_F4  = Vector<double>(128, bufferF4x);
-                rawBuffer_F8  = Vector<double>(128, bufferF8x);
-                rawBuffer_AF4 = Vector<double>(128, bufferAF4x);
-                baseLineCorrect();
-                emit bufferUpdated();
-            }
-        }
-    }
-}
-
-void ECEngine::updateBuffer(){
-    if(readyToCollect){
-        EE_DataUpdateHandle(0, hData);
-        EE_DataGetNumberOfSample(hData,&nSamplesTaken);
-
-        qDebug() << "Updated buffer: " << nSamplesTaken;
-
-        if (nSamplesTaken != 0) {
-            EE_DataGetMultiChannels(hData, targetChannelList, 14, bufferHead, nSamplesTaken);
-            nSamplesTaken = 128;
-            rawBuffer_AF3 = Vector<double>(nSamplesTaken, bufferHead[0]);
-            rawBuffer_F7  = Vector<double>(nSamplesTaken, bufferHead[1]);
-            rawBuffer_F3  = Vector<double>(nSamplesTaken, bufferHead[2]);
-            rawBuffer_FC5  = Vector<double>(nSamplesTaken, bufferHead[3]);
-            rawBuffer_T7  = Vector<double>(nSamplesTaken, bufferHead[4]);
-            rawBuffer_P7  = Vector<double>(nSamplesTaken, bufferHead[5]);
-            rawBuffer_O1  = Vector<double>(nSamplesTaken, bufferHead[6]);
-            rawBuffer_O2  = Vector<double>(nSamplesTaken, bufferHead[7]);
-            rawBuffer_P8  = Vector<double>(nSamplesTaken, bufferHead[8]);
-            rawBuffer_T8  = Vector<double>(nSamplesTaken, bufferHead[9]);
-            rawBuffer_FC6  = Vector<double>(nSamplesTaken, bufferHead[10]);
-            rawBuffer_F4  = Vector<double>(nSamplesTaken, bufferHead[11]);
-            rawBuffer_F8  = Vector<double>(nSamplesTaken, bufferHead[12]);
-            rawBuffer_AF4  = Vector<double>(nSamplesTaken, bufferHead[13]);
-            baseLineCorrect();
             emit bufferUpdated();
+            if(bufferCount>=640)bufferCount=0;
         }
     }
 }
