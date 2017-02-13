@@ -15,6 +15,7 @@ using namespace splab;
 //采样时间固定为1s,能保证0~64Hz中1Hz的分辨率。
 #define REALTIMEUPDATETIME 33
 //30fps is good enough for this application, so every 33 ms checks the update
+#define SIMU true
 
 class ECEngine : public QObject
 {
@@ -38,6 +39,9 @@ public slots:
     void computeFFT();
 
 private:
+
+    bool simuMode;      //if simuMode is true, using simulator data.
+
     int                 batteryLevel, maxBatteryLevel;//ES_GetBatteryChargeLevel()
     int                 headsetOn;//ES_GetHeadsetOn()
     EE_SignalStrength_t wirelessSignalStatus;//ES_GetWirelessSignalStatus()

@@ -9,6 +9,9 @@
 #include "spppinclude/vectormath.h"
 #include "spppinclude/fft.h"
 #include <deque>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 #define BUFFEROFFSET 640
 //128*5=640
@@ -36,6 +39,7 @@ ECEngine::ECEngine(QObject *parent)://构造函数，初始化那几个简单的
     readyToCollect(false),
     nSamplesTaken(0),
     userAdded(false),
+    simuMode(SIMU),
     bufferCount(0){
 
     initEngine();
@@ -46,6 +50,10 @@ ECEngine::~ECEngine(){
 }
 
 void ECEngine::initEngine(){
+
+    srand((int)time(0));
+
+
     bufferHead[0]=bufferAF3;
     bufferHead[1]=bufferF7;
     bufferHead[2]=bufferF3;
@@ -115,14 +123,34 @@ void ECEngine::computeBaseLine(){
 }
 
 void ECEngine::updateDQ(){
+    if(simuMode){
+        nSamplesTaken = 2;
+        for(int i=0;i<nSamplesTaken;i++){
+            bufferAF3[i] = 3900+(rand()%60);
+            bufferAF4[i] = 3900+(rand()%60);
+            bufferF7[i] = 3900+(rand()%60);
+            bufferF8[i] = 3900+(rand()%60);
+            bufferF3[i] = 3900+(rand()%60);
+            bufferF4[i] = 3900+(rand()%60);
+            bufferFC5[i] = 3900+(rand()%60);
+            bufferFC6[i] = 3900+(rand()%60);
+            bufferT7[i] = 3900+(rand()%60);
+            bufferT8[i] = 3900+(rand()%60);
+            bufferP7[i] = 3900+(rand()%60);
+            bufferP8[i] = 3900+(rand()%60);
+            bufferO1[i] = 3900+(rand()%60);
+            bufferO2[i] = 3900+(rand()%60);
+        }
+    }
+
     if(readyToCollect){
-        EE_DataUpdateHandle(0, hData);
-        EE_DataGetNumberOfSample(hData,&nSamplesTaken);
+        if(!simuMode)EE_DataUpdateHandle(0, hData);
+        if(!simuMode)EE_DataGetNumberOfSample(hData,&nSamplesTaken);
 
         //qDebug() << "Updated buffer: " << nSamplesTaken;
 
         if (nSamplesTaken > 0) {
-            EE_DataGetMultiChannels(hData, targetChannelList, 14, bufferHead, nSamplesTaken);//get data
+            if(!simuMode)EE_DataGetMultiChannels(hData, targetChannelList, 14, bufferHead, nSamplesTaken);//get data
             for(int i=0;i<nSamplesTaken;i++){
                 if(bufferCount+i<=640){
                     sumOfAF3 += bufferAF3[i];sumOfAF3 -= bufferAF3x[bufferCount+i];

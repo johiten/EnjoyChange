@@ -231,7 +231,6 @@ QCheckBox::indicator:unchecked{
    </property>
   </widget>
   <zorder>label</zorder>
-  <zorder>checkBoxAF3</zorder>
   <zorder>checkBoxAF4</zorder>
   <zorder>checkBoxF7</zorder>
   <zorder>checkBoxF8</zorder>
@@ -245,6 +244,7 @@ QCheckBox::indicator:unchecked{
   <zorder>checkBoxP8</zorder>
   <zorder>checkBoxO1</zorder>
   <zorder>checkBoxO2</zorder>
+  <zorder>checkBoxAF3</zorder>
  </widget>
  <resources>
   <include location="resource.qrc"/>

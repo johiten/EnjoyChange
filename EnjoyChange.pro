@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     training.cpp \
     signalpanel.cpp \
     brainpowerpanel.cpp \
-    deviceinfopanel.cpp
+    deviceinfopanel.cpp \
+    simuemotiv.cpp
 
 HEADERS  += mainwindow.h \
     include/edk.h \
@@ -187,7 +188,8 @@ HEADERS  += mainwindow.h \
     training.h \
     signalpanel.h \
     brainpowerpanel.h \
-    deviceinfopanel.h
+    deviceinfopanel.h \
+    simuemotiv.h
 
 FORMS    += mainwindow.ui \
     training.ui \
