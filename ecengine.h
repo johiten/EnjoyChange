@@ -15,7 +15,7 @@ using namespace splab;
 //采样时间固定为1s,能保证0~64Hz中1Hz的分辨率。
 #define REALTIMEUPDATETIME 33
 //30fps is good enough for this application, so every 33 ms checks the update
-#define SIMU true
+#define SIMU false
 
 class ECEngine : public QObject
 {
@@ -30,7 +30,7 @@ public:
 
 signals:
     void bufferUpdated();
-    void buffer128();
+    void buffer256();
 
 public slots:
     //void updateBuffer();//SLOT
@@ -41,6 +41,7 @@ public slots:
 private:
 
     bool simuMode;      //if simuMode is true, using simulator data.
+    bool readyToDisplay640;
 
     int                 batteryLevel, maxBatteryLevel;//ES_GetBatteryChargeLevel()
     int                 headsetOn;//ES_GetHeadsetOn()
@@ -60,6 +61,10 @@ private:
     double *            bufferHead[16];
     double  bufferAF3[520],bufferF7[520],bufferF3[520],bufferFC5[520],bufferT7[520],bufferP7[520],bufferO1[520],
             bufferAF4[520],bufferF8[520],bufferF4[520],bufferFC6[520],bufferT8[520],bufferP8[520],bufferO2[520];
+    double  displayBufferAF3[1300],displayBufferF7[1300],displayBufferF3[1300],displayBufferFC5[1300],displayBufferT7[1300],displayBufferP7[1300],displayBufferO1[1300],
+            displayBufferAF4[1300],displayBufferF8[1300],displayBufferF4[1300],displayBufferFC6[1300],displayBufferT8[1300],displayBufferP8[1300],displayBufferO2[1300];
+    double  analyseBufferAF3[300],analyseBufferF7[300],analyseBufferF3[300],analyseBufferFC5[300],analyseBufferT7[300],analyseBufferP7[300],analyseBufferO1[300],
+            analyseBufferAF4[300],analyseBufferF8[300],analyseBufferF4[300],analyseBufferFC6[300],analyseBufferT8[300],analyseBufferP8[300],analyseBufferO2[300];
     double sumOfAF3, sumOfAF4, sumOfF3, sumOfF4, sumOfF7, sumOfF8, sumOfFC5, sumOfFC6, sumOfT7, sumOfT8, sumOfP7, sumOfP8, sumOfO1, sumOfO2;//for baselineCorrecting
 
 public:
@@ -103,9 +108,8 @@ public:
         baseLineP7,baseLineP8,
         baseLineO1,baseLineO2;
 
-    int bufferCount;
-    double  bufferAF3x[1300],bufferF7x[1300],bufferF3x[1300],bufferFC5x[1300],bufferT7x[1300],bufferP7x[1300],bufferO1x[1300],
-            bufferAF4x[1300],bufferF8x[1300],bufferF4x[1300],bufferFC6x[1300],bufferT8x[1300],bufferP8x[1300],bufferO2x[1300];
+    int displayBufferCount, analyseBufferCount;
+
 };
 
 #endif // ECENGINE_H
